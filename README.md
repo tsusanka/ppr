@@ -3,9 +3,9 @@
 
 ## Vstupní data:
 
-n = délka rovnostranného trojúhelníka, n>=5 
-q = přirozené číslo, n^2>q 
-X0 = počáteční konfigurace zkonstruovaná zpětným provedením q náhodných tahu z cílové konfigurace. Platí q>=d(X0). 
+- n = délka rovnostranného trojúhelníka, n>=5
+- q = přirozené číslo, n^2>q
+- X0 = počáteční konfigurace zkonstruovaná zpětným provedením q náhodných tahu z cílové konfigurace. Platí q>=d(X0). 
 
 ## Pravidla a cíl hry:
 
