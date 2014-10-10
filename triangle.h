@@ -13,6 +13,7 @@ class Triangle
 		Triangle(int size);
 		~Triangle();
 		void print();
+		void fill();
 
 };
 

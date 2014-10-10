@@ -3,6 +3,8 @@
 
 main()
 {
-	new Triangle(5);
+	Triangle *t = new Triangle(5);
+	t->fill();
+	t->print();
 }
 
