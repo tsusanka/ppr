@@ -1,6 +1,8 @@
 #include "triangle.h"
 #include <stdio.h>
 
+#define EMPTY 0
+
 Triangle::Triangle(int s)
 {
 	size = s;
@@ -43,7 +45,7 @@ void Triangle::fill()
 	{
 		for (int y = 0; y <= i; y++)
 		{
-			array[i][y] = ++cnt;
+			array[i][y] = cnt++;
 		}
 	}
 }
@@ -60,7 +62,14 @@ void Triangle::print()
 		// values
 		for (int y = 0; y <= i; y++)
 		{
-			printf(" %02d ", array[i][y]);
+			if (array[i][y] == EMPTY)
+			{
+				printf(" xx ");
+			}
+			else
+			{
+				printf(" %02d ", array[i][y]);
+			}
 		}
 		printf("\n");
 	}

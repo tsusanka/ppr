@@ -2,6 +2,16 @@
 #include <assert.h>
 #include "triangle.h"
 
+enum Direction
+{
+	TOP_LEFT,
+	TOP_RIGHT,
+	LEFT,
+	RIGHT,
+	BOTTOM_LEFT,
+	BOTTOM_RIGHT
+};
+
 main()
 {
 	int n = 0, q = 0;
