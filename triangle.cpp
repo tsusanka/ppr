@@ -48,6 +48,7 @@ void Triangle::fill()
 			array[i][y] = cnt++;
 		}
 	}
+	empty = &array[0][0];
 }
 
 void Triangle::print()

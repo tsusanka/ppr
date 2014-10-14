@@ -7,6 +7,7 @@ class Triangle
 		int **array;
 		void init();
 		void destroy();
+		int *empty;
 
 
 	public:
