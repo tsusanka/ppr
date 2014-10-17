@@ -2,16 +2,6 @@
 #include <assert.h>
 #include "triangle.h"
 
-enum Direction
-{
-	TOP_LEFT,
-	TOP_RIGHT,
-	LEFT,
-	RIGHT,
-	BOTTOM_LEFT,
-	BOTTOM_RIGHT
-};
-
 main()
 {
 	int n = 0, q = 0;
@@ -25,5 +15,11 @@ main()
 	Triangle *t = new Triangle(n);
 	t->fill();
 	t->print();
+        
+        for( int i = 0; i < q; i++ ){
+            t->randomStep();
+        }
+        t->print();
+        scanf("%d", &q);
 }
 

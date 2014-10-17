@@ -1,3 +1,12 @@
+enum Direction
+{
+	TOP_LEFT,
+	TOP_RIGHT,
+	LEFT,
+	RIGHT,
+	BOTTOM_LEFT,
+	BOTTOM_RIGHT
+};
 
 class Triangle
 {
@@ -7,14 +16,17 @@ class Triangle
 		int **array;
 		void init();
 		void destroy();
-		int *empty;
-
+                int move(Direction where);
+                int move(int dx, int dy);
+                int emptyX;
+                int emptyY;
 
 	public:
 		Triangle(int size);
 		~Triangle();
 		void print();
 		void fill();
+                void randomStep();
 
 };
 
