@@ -91,23 +91,23 @@ int Triangle::move(Direction where)
             return INVALID_MOVE;
     }
 }
-
+/*
+    X is horizontal position in triangle, Y is vertical!!
+ */
 int Triangle::move(int dx, int dy)
 {
     if( emptyX + dx < 0 || emptyX + dx > emptyY + dy)  //The maximum x in the Y depth in the triangle is Y
         return INVALID_MOVE;
-    if( emptyY + dy < 0 || emptyY + dy > size) 
+    if( emptyY + dy < 0 || emptyY + dy >= size) 
         return INVALID_MOVE;
     
-    printf("Switching EMPTY with %d at position [%d,%d]", array[emptyX + dx][emptyY + dy], emptyX + dx, emptyY + dy);
+    printf("Switching EMPTY with %d at position [%d,%d]\n", array[emptyY + dy][emptyX + dx], emptyX + dx, emptyY + dy);
     
-    array[emptyX][emptyY] = array[emptyX + dx][emptyY + dy];
-    array[emptyX + dx][emptyY + dy] = EMPTY;
+    array[emptyY][emptyX] = array[emptyY + dy][emptyX + dx];
+    array[emptyY + dy][emptyX + dx] = EMPTY;
     emptyX += dx;
     emptyY += dy;
-    
-    
-    
+     
     return VALID_MOVE;
 }
 
