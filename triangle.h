@@ -26,7 +26,7 @@ class Triangle
 		void print();
 		void fill();
                 int move(Direction where);
-                int moveBack(Direction where);
+                Direction oppositeDirection(Direction dir);
                 void randomStep();
                 bool isSorted();
                 int getDistanceX();

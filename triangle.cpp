@@ -81,6 +81,16 @@ bool Triangle::isSorted()
 
 /*
  * Calculates D(X), the distance between empty and top
+ * 
+ * Edux:
+ *  d(X) je spodní mez počtu tahů, kterými se lze dostat z konfigurace X
+ *  do cílové konfigurace C. Tato spodní mez je rovna součtu vzdáleností
+ *  koleček od jejich cílových políček. Vzdálenost 2 políček v této síti
+ *  se počítá takto: Jsou-li obě políčka na úsečce rovnoběžné se stranou
+ *  trojúhelníka, pak je vzdálenost rovna jejich lineární vzdálenosti po
+ *  této úsečce. V opačném případě tvoří políčka vrcholy kosodélníka
+ *  a vzdálenost se rovná součtu délek jeho dvou stran. Spodní mez počtu
+ *  tahů nejlepšího možného řešení je tedy d(X0).
  */
 int Triangle::getDistanceX()
 {
@@ -105,19 +115,21 @@ void Triangle::randomStep()
         
     } while( move(test) == INVALID_MOVE );
 }
-
-int Triangle::moveBack(Direction where)
+/*
+ * returns opposite direction enum, should be probably static
+ */
+Direction Triangle::oppositeDirection(Direction dir)
 {
-    switch (where){
-        case LEFT: return move(RIGHT);
-        case RIGHT: return move(LEFT);
-        case BOTTOM_LEFT: return move(TOP_RIGHT);
-        case BOTTOM_RIGHT: return move(TOP_LEFT);
-        case TOP_LEFT: return move(TOP_LEFT);
-        case TOP_RIGHT: return move(BOTTOM_LEFT);
+    switch (dir){
+        case LEFT: return RIGHT;
+        case RIGHT: return LEFT;
+        case BOTTOM_LEFT: return TOP_RIGHT;
+        case BOTTOM_RIGHT: return TOP_LEFT;
+        case TOP_LEFT: return TOP_LEFT;
+        case TOP_RIGHT: return BOTTOM_LEFT;
         default: 
             printf("Invalid direction");
-            return INVALID_MOVE;
+            throw -1;
     }
 }
 
