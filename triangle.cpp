@@ -58,6 +58,35 @@ void Triangle::fill()
         emptyX = emptyY = 0;
 }
 
+/*
+ * Checks if triangle is sorted, in the same form as it was initialized by fill method 
+ */
+
+bool Triangle::isSorted()
+{
+        if( array[0][0] != EMPTY)
+            return false;
+        
+        int cnt = 0;
+	for (int i = 0; i < size; i++)
+	{
+		for (int y = 0; y <= i; y++)
+		{
+			if( array[i][y] != cnt++ ) 
+                            return false;
+		}
+	}
+        return true;
+}
+
+/*
+ * Calculates D(X), the distance between empty and top
+ */
+int Triangle::getDistanceX()
+{
+    return emptyX+emptyY; //TODO, fix. distances of all numbers from their target positions should be added
+}
+
 /**
  * Shifts the empty place in a random (but valid) direction
  */
@@ -75,6 +104,21 @@ void Triangle::randomStep()
         }
         
     } while( move(test) == INVALID_MOVE );
+}
+
+int Triangle::moveBack(Direction where)
+{
+    switch (where){
+        case LEFT: return move(RIGHT);
+        case RIGHT: return move(LEFT);
+        case BOTTOM_LEFT: return move(TOP_RIGHT);
+        case BOTTOM_RIGHT: return move(TOP_LEFT);
+        case TOP_LEFT: return move(TOP_LEFT);
+        case TOP_RIGHT: return move(BOTTOM_LEFT);
+        default: 
+            printf("Invalid direction");
+            return INVALID_MOVE;
+    }
 }
 
 int Triangle::move(Direction where)
@@ -110,6 +154,7 @@ int Triangle::move(int dx, int dy)
      
     return VALID_MOVE;
 }
+
 
 void Triangle::print()
 {
