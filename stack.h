@@ -25,7 +25,7 @@ typedef struct NodeT
 		return  !(this == &rhs);
 	}
 
-} Node;
+} Node; // Represents DFS alg nodes
 
 const Node NULL_NODE = {NULL, RIGHT, 0};
 

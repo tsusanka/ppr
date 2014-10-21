@@ -27,8 +27,14 @@ main ()
 	t->print();
 
 	Stack * s = new Stack;
-	Node initialNode = {NULL, RIGHT, 0};
-	s->push( initialNode );
+
+	// first nodes inserted to stack
+	for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
+	{
+		Direction direction = Direction(dir);
+		Node initialNode = { NULL, direction, 0 }; // TODO:fix memory leak?
+		s->push( initialNode );
+	}
 
 	// init best solution
 	Direction * bestSteps = new Direction[q];
