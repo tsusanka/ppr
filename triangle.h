@@ -1,12 +1,7 @@
-enum Direction
-{
-	TOP_LEFT,
-	TOP_RIGHT,
-	LEFT,
-	RIGHT,
-	BOTTOM_LEFT,
-	BOTTOM_RIGHT
-};
+#ifndef DIRECTION_H
+#define DIRECTION_H
+#include "direction.h"
+#endif
 
 class Triangle
 {

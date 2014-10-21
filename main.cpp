@@ -1,56 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "triangle.h"
-
-#define INIT_STACK_SIZE 500
-
-typedef struct NodeT
-{
-	struct NodeT* prevNode;
-	Direction lastMove;
-	int steps;
-
-	bool operator==(const NodeT& rhs) const
-	{
-		return  rhs.steps == this->steps &&
-				rhs.prevNode == this->prevNode &&
-				rhs.lastMove == this->lastMove;
-	}
-
-	bool operator!=(const NodeT& rhs) const
-	{
-		return  !(this == &rhs);
-	}
-
-} Node;
-
-const Node NULL_NODE = {NULL, RIGHT, 0};
-
-//======== STACK (LIFO) ===============//
-int stackCapacity;
-Node * stack;
-int stackSize;
-
-void push( Node n )
-{
-	stack[ stackSize++ ] = n;  //TODO check capacity and inflate the stack if necessary
-}
-
-Node pop( )
-{
-	if( stackSize == 0 ) 
-		return NULL_NODE;
-	return stack[ --stackSize ];
-}
-
-
-const Node top( )
-{
-	if( stackSize == 0 ) 
-		return NULL_NODE;
-	return stack[ stackSize - 1  ];
-}
-//=====================================
+#include "stack.h"
 
 main ()
 {
@@ -74,25 +25,20 @@ main ()
 	}
 	printf("Triangle after shuffle:\n");
 	t->print();
-		
-	// ======== DEPTH-FIRST SEARCH ==========//
 
-	// init stack
-	stackCapacity = INIT_STACK_SIZE;
-	stack = new Node[stackCapacity];
-	stackSize = 0;
+	Stack * s = new Stack;
+	Node initialNode = {NULL, RIGHT, 0};
+	s->push( initialNode );
 
 	// init best solution
-	Direction * bestSolution = new Direction[q];
-	int bestSolutionSteps = q;
+	Direction * bestSteps = new Direction[q];
+	int bestCount = q;
 
-	// push first node
-	Node initialNode = {NULL, RIGHT, 0};
-	push( initialNode );     
+	// ======== DEPTH-FIRST SEARCH ==========//
 
-	while( stackSize > 0 )
+	while( s->getSize() > 0 )
 	{
-		Node n = pop();
+		Node n = s->pop();
 
 		if( n.prevNode != NULL && n.prevNode->lastMove == t->oppositeDirection(n.lastMove) ) // simple optimization, don't make moves there and back
 			continue;
@@ -102,33 +48,33 @@ main ()
 
 		if( t->isSorted() ) // this is a solution
 		{
-			if( n.steps < bestSolutionSteps )
+			if( n.steps < bestCount )
 			{
-				bestSolutionSteps = n.steps;
-				printf("New solution found with %d steps.\n", bestSolutionSteps);
+				bestCount = n.steps;
+				printf("New solution found with %d steps->\n", bestCount);
 				//TODO save best solution;
 			}
 			t->move( t->oppositeDirection(n.lastMove) ); // revert last move
 			continue;
 		}
 
-		if( n.steps < bestSolutionSteps )
+		if( n.steps < bestCount )
 		{
 			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ ) // iterate over enum
 			{
 				Direction direction = Direction(dir);
 				Node newNode = { &n, direction, n.steps+1 }; // where do we deallocate this shit? TODO:fix memory leak
-				push(newNode);
+				s->push(newNode);
 			}
 		}else{
 			t->move( t->oppositeDirection(n.lastMove) ); // revert last move
 
-			if( top() != NULL_NODE && top().steps < n.steps ) // dead-end
+			if( s->top() != NULL_NODE && s->top().steps < n.steps ) // dead-end
 			{
 				t->move( t->oppositeDirection(n.prevNode->lastMove) ); // revert parent move
 			}
 		}
 	}
-	printf("End: best solution found with %d steps", bestSolutionSteps);
+	printf("End: best solution found with %d steps", bestCount);
 	scanf("%d", &q);
 }
