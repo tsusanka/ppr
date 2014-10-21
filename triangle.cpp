@@ -21,10 +21,10 @@ Triangle::~Triangle()
 void Triangle::init()
 {
 	array = new int*[size];
-        
-        /* initialize random seed: */
-        srand (time(NULL));
-        
+	
+	/* initialize random seed: */
+	srand (time(NULL));
+	
 	for (int i = 0; i < size; i++)
 	{
 		int *row;
@@ -43,7 +43,7 @@ void Triangle::destroy()
 }
 
 /**
- * Fills triangle with integers, no blank space yet.
+ * Fills triangle with integers, puts EMPTY at the top.
  */
 void Triangle::fill()
 {
@@ -55,31 +55,30 @@ void Triangle::fill()
 			array[i][y] = cnt++;
 		}
 	}
-        emptyX = emptyY = 0;
+	emptyX = emptyY = 0;
 }
 
-/*
+/**
  * Checks if triangle is sorted, in the same form as it was initialized by fill method 
  */
-
 bool Triangle::isSorted()
 {
-        if( array[0][0] != EMPTY)
-            return false;
-        
-        int cnt = 0;
+	if( array[0][0] != EMPTY)
+		return false;
+
+	int cnt = 0;
 	for (int i = 0; i < size; i++)
 	{
 		for (int y = 0; y <= i; y++)
 		{
 			if( array[i][y] != cnt++ ) 
-                            return false;
+				return false;
 		}
 	}
-        return true;
+	return true;
 }
 
-/*
+/**
  * Calculates D(X), the distance between empty and top
  * 
  * Edux:
@@ -94,7 +93,7 @@ bool Triangle::isSorted()
  */
 int Triangle::getDistanceX()
 {
-    return emptyX+emptyY; //TODO, fix. distances of all numbers from their target positions should be added
+	return emptyX + emptyY; // TODO, fix. distances of all numbers from their target positions should be added
 }
 
 /**
@@ -102,71 +101,75 @@ int Triangle::getDistanceX()
  */
 void Triangle::randomStep()
 {
-    Direction test;
-    int tries = 0;
-    do
-    {
-        test = Direction( rand() % 6 );
-        
-        if( tries++ > 30 ){ //stop after 30 tries
-            printf("Something is wrong, no direction seems valid");
-            return;
-        }
-        
-    } while( move(test) == INVALID_MOVE );
+	Direction test;
+	int tries = 0;
+	do
+	{
+		test = Direction( rand() % 6 );
+
+		if( tries++ > 30 ) // stop after 30 tries
+		{
+			printf("Something is wrong, no direction seems valid");
+			return;
+		}
+	}
+	while( move(test) == INVALID_MOVE );
 }
+
 /*
  * returns opposite direction enum, should be probably static
  */
 Direction Triangle::oppositeDirection(Direction dir)
 {
-    switch (dir){
-        case LEFT: return RIGHT;
-        case RIGHT: return LEFT;
-        case BOTTOM_LEFT: return TOP_RIGHT;
-        case BOTTOM_RIGHT: return TOP_LEFT;
-        case TOP_LEFT: return TOP_LEFT;
-        case TOP_RIGHT: return BOTTOM_LEFT;
-        default: 
-            printf("Invalid direction");
-            throw -1;
-    }
+	switch (dir)
+	{
+		case LEFT: return RIGHT;
+		case RIGHT: return LEFT;
+		case BOTTOM_LEFT: return TOP_RIGHT;
+		case BOTTOM_RIGHT: return TOP_LEFT;
+		case TOP_LEFT: return TOP_LEFT;
+		case TOP_RIGHT: return BOTTOM_LEFT;
+		default: 
+			printf("Invalid direction");
+			throw -1;
+	}
 }
 
 int Triangle::move(Direction where)
 {
-    switch (where){
-        case LEFT: return move(-1,0);
-        case RIGHT: return move(1,0);
-        case BOTTOM_LEFT: return move(0,1);
-        case BOTTOM_RIGHT: return move(1,1);
-        case TOP_LEFT: return move(-1,-1);
-        case TOP_RIGHT: return move(-1,0);
-        default: 
-            printf("Invalid direction");
-            return INVALID_MOVE;
-    }
+	switch (where)
+	{
+		case LEFT: return move(-1,0);
+		case RIGHT: return move(1,0);
+		case BOTTOM_LEFT: return move(0,1);
+		case BOTTOM_RIGHT: return move(1,1);
+		case TOP_LEFT: return move(-1,-1);
+		case TOP_RIGHT: return move(-1,0);
+		default: 
+			printf("Invalid direction");
+			return INVALID_MOVE;
+	}
 }
-/*
-    X is horizontal position in triangle, Y is vertical!!
+
+/**
+ * X is horizontal position in triangle, Y is vertical!!
  */
 int Triangle::move(int dx, int dy)
 {
-    if( emptyX + dx < 0 || emptyX + dx > emptyY + dy)  //The maximum x in the Y depth in the triangle is Y
-        return INVALID_MOVE;
-    if( emptyY + dy < 0 || emptyY + dy >= size) 
-        return INVALID_MOVE;
-    
-    printf("Switching EMPTY with %d at position [%d,%d]\n", array[emptyY + dy][emptyX + dx], emptyX + dx, emptyY + dy);
-    
-    array[emptyY][emptyX] = array[emptyY + dy][emptyX + dx];
-    array[emptyY + dy][emptyX + dx] = EMPTY;
-    emptyX += dx;
-    emptyY += dy;
-     
-    return VALID_MOVE;
-}
+	if( emptyX + dx < 0 || emptyX + dx > emptyY + dy)  //The maximum x in the Y depth in the triangle is Y
+		return INVALID_MOVE;
+	if( emptyY + dy < 0 || emptyY + dy >= size) 
+		return INVALID_MOVE;
 
+	printf("Switching EMPTY with %d at position [%d,%d]\n", array[emptyY + dy][emptyX + dx], emptyX + dx, emptyY + dy);
+
+	array[emptyY][emptyX] = array[emptyY + dy][emptyX + dx];
+	array[emptyY + dy][emptyX + dx] = EMPTY;
+	emptyX += dx;
+	emptyY += dy;
+
+	return VALID_MOVE;
+}
 
 void Triangle::print()
 {
@@ -192,4 +195,3 @@ void Triangle::print()
 		printf("\n");
 	}
 }
-
