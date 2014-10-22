@@ -139,35 +139,33 @@ int Triangle::move(Direction where)
 {
 	switch (where)
 	{
-		case LEFT: return move(-1,0);
-		case RIGHT: return move(1,0);
-		case BOTTOM_LEFT: return move(0,1);
-		case BOTTOM_RIGHT: return move(1,1);
-		case TOP_LEFT: return move(-1,-1);
-		case TOP_RIGHT: return move(0,-1);
+		case LEFT: return move(0, -1); // 0 = same row; -1 = one to the left
+		case RIGHT: return move(0, 1);
+		case BOTTOM_LEFT: return move(1, 0);
+		case BOTTOM_RIGHT: return move(1, 1);
+		case TOP_LEFT: return move(-1, -1);
+		case TOP_RIGHT: return move(-1, 0);
 		default:
 			printf("Invalid direction");
 			return INVALID_MOVE;
 	}
 }
 
-/**
- * X is horizontal position in triangle, Y is vertical!!
- */
 int Triangle::move(int dx, int dy)
 {
-	if( emptyX + dx < 0 || emptyX + dx > emptyY + dy)  //The maximum x in the Y depth in the triangle is Y
+	if( emptyY + dy < 0 || emptyY + dy > emptyX + dx) // The maximum y in the X depth in the triangle is X
 		return INVALID_MOVE;
-	if( emptyY + dy < 0 || emptyY + dy >= size) 
+	if( emptyX + dx < 0 || emptyX + dx >= size)
 		return INVALID_MOVE;
 
-	printf("Switching EMPTY with %d at position [%d,%d]\n", array[emptyY + dy][emptyX + dx], emptyX + dx, emptyY + dy);
+	printf("Switching EMPTY[%d,%d] with '%d'[%d,%d]\n", emptyX, emptyY, array[emptyX + dx][emptyY + dy], emptyX + dx, emptyY + dy);
 
-	array[emptyY][emptyX] = array[emptyY + dy][emptyX + dx];
-	array[emptyY + dy][emptyX + dx] = EMPTY;
-	emptyX += dx;
+	array[emptyX][emptyY] = array[emptyX + dx][emptyY + dy];
+	array[emptyX + dx][emptyY + dy] = EMPTY;
 	emptyY += dy;
+	emptyX += dx;
 
+	printf("After move print:\n");
 	print();
 
 	return VALID_MOVE;
