@@ -198,6 +198,10 @@ void Triangle::print()
  */
 void Triangle::printDirectionSymbol(Direction dir)
 {
+    #ifdef _WIN32
+    printDirectionSymbolWin32(dir);
+    return;
+    #endif
 	switch (dir)
 	{
 		case LEFT:
@@ -217,6 +221,34 @@ void Triangle::printDirectionSymbol(Direction dir)
 			break;
 		case TOP_RIGHT:
 			printf("\u2197");
+			break;
+		default:
+			printf("invalid direction");
+			throw -2;
+	}
+}
+
+void Triangle::printDirectionSymbolWin32(Direction dir)
+{
+	switch (dir)
+	{
+		case LEFT:
+			printf("<-");
+			break;
+		case RIGHT:
+			printf("->");
+			break;
+		case BOTTOM_LEFT:
+			printf("\\.");
+			break;
+		case BOTTOM_RIGHT:
+			printf("./");
+			break;
+		case TOP_LEFT:
+			printf("/|");
+			break;
+		case TOP_RIGHT:
+			printf("|\\");
 			break;
 		default:
 			printf("invalid direction");
