@@ -55,10 +55,11 @@ main ()
 
 		if( t->isSorted() ) // this is a solution
 		{
-			if( n.steps < bestCount )
+			printf("Sorted! Steps: %d; bestCount: %d\n", n.steps, bestCount);
+			if( n.steps <= bestCount )
 			{
 				bestCount = n.steps;
-				printf("New solution found with %d steps->\n", bestCount);
+				printf("New solution found with %d steps\n", bestCount);
 				//TODO save best solution;
 			}
 			t->move( t->oppositeDirection(n.lastMove) ); // revert last move
