@@ -139,37 +139,31 @@ int Triangle::move(Direction where)
 {
 	switch (where)
 	{
-		case LEFT: return move(0, -1); // 0 = same row; -1 = one to the left
-		case RIGHT: return move(0, 1);
-		case BOTTOM_LEFT: return move(1, 0);
-		case BOTTOM_RIGHT: return move(1, 1);
-		case TOP_LEFT: return move(-1, -1);
-		case TOP_RIGHT: return move(-1, 0);
+		case LEFT: return move(LEFT, 0, -1); // 0 = same row; -1 = one to the left
+		case RIGHT: return move(RIGHT, 0, 1);
+		case BOTTOM_LEFT: return move(BOTTOM_LEFT, 1, 0);
+		case BOTTOM_RIGHT: return move(BOTTOM_RIGHT, 1, 1);
+		case TOP_LEFT: return move(TOP_LEFT, -1, -1);
+		case TOP_RIGHT: return move(TOP_RIGHT, -1, 0);
 		default:
 			printf("Invalid direction");
 			return INVALID_MOVE;
 	}
 }
 
-int Triangle::move(int dx, int dy)
+int Triangle::move(Direction where, int dx, int dy) // direction only for printing purposes
 {
 	if( emptyY + dy < 0 || emptyY + dy > emptyX + dx) // The maximum y in the X depth in the triangle is X
 		return INVALID_MOVE;
 	if( emptyX + dx < 0 || emptyX + dx >= size)
 		return INVALID_MOVE;
 
-	printf("------------- MOVE: ---------------\n");
-	printf("before:\n");
-	print();
-	// printf("Switching EMPTY[%d,%d] with '%d'[%d,%d]\n", emptyX, emptyY, array[emptyX + dx][emptyY + dy], emptyX + dx, emptyY + dy);
-
 	array[emptyX][emptyY] = array[emptyX + dx][emptyY + dy];
 	array[emptyX + dx][emptyY + dy] = EMPTY;
 	emptyY += dy;
 	emptyX += dx;
 
-	printf("after:\n");
-	print();
+	printMove(where);
 
 	return VALID_MOVE;
 }
@@ -197,4 +191,46 @@ void Triangle::print()
 		}
 		printf("\n");
 	}
+}
+
+/**
+ * Should be static as well
+ */
+void Triangle::printDirectionSymbol(Direction dir)
+{
+	switch (dir)
+	{
+		case LEFT:
+			printf("\u2190");
+			break;
+		case RIGHT:
+			printf("\u2192");
+			break;
+		case BOTTOM_LEFT:
+			printf("\u2199");
+			break;
+		case BOTTOM_RIGHT:
+			printf("\u2198");
+			break;
+		case TOP_LEFT:
+			printf("\u2196");
+			break;
+		case TOP_RIGHT:
+			printf("\u2197");
+			break;
+		default:
+			printf("invalid direction");
+			throw -2;
+	}
+}
+
+void Triangle::printMove(Direction where)
+{
+	printf("Moving ");
+	for (int i = 0; i < 10; ++i)
+	{
+		printDirectionSymbol(where);
+	}
+	printf(" result:\n");
+	print();
 }

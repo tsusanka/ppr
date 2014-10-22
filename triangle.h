@@ -11,9 +11,10 @@ class Triangle
 		int **array;
 		void init();
 		void destroy();
-		int move(int dx, int dy);
+		int move(Direction where, int dx, int dy);
 		int emptyX;
 		int emptyY;
+		void printMove(Direction dir);
 
 	public:
 		Triangle(int size);
@@ -25,4 +26,5 @@ class Triangle
 		void randomStep();
 		bool isSorted();
 		int getDistanceX();
+		void printDirectionSymbol(Direction dir);
 };
