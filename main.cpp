@@ -25,6 +25,7 @@ main ()
 	}
 	printf("Triangle after shuffle:\n");
 	t->print();
+	printf("==============================\n");
 
 	Stack * s = new Stack;
 

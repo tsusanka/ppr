@@ -144,8 +144,8 @@ int Triangle::move(Direction where)
 		case BOTTOM_LEFT: return move(0,1);
 		case BOTTOM_RIGHT: return move(1,1);
 		case TOP_LEFT: return move(-1,-1);
-		case TOP_RIGHT: return move(-1,0);
-		default: 
+		case TOP_RIGHT: return move(0,-1);
+		default:
 			printf("Invalid direction");
 			return INVALID_MOVE;
 	}
@@ -167,6 +167,8 @@ int Triangle::move(int dx, int dy)
 	array[emptyY + dy][emptyX + dx] = EMPTY;
 	emptyX += dx;
 	emptyY += dy;
+
+	print();
 
 	return VALID_MOVE;
 }
