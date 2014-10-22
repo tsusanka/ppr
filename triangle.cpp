@@ -158,14 +158,17 @@ int Triangle::move(int dx, int dy)
 	if( emptyX + dx < 0 || emptyX + dx >= size)
 		return INVALID_MOVE;
 
-	printf("Switching EMPTY[%d,%d] with '%d'[%d,%d]\n", emptyX, emptyY, array[emptyX + dx][emptyY + dy], emptyX + dx, emptyY + dy);
+	printf("------------- MOVE: ---------------\n");
+	printf("before:\n");
+	print();
+	// printf("Switching EMPTY[%d,%d] with '%d'[%d,%d]\n", emptyX, emptyY, array[emptyX + dx][emptyY + dy], emptyX + dx, emptyY + dy);
 
 	array[emptyX][emptyY] = array[emptyX + dx][emptyY + dy];
 	array[emptyX + dx][emptyY + dy] = EMPTY;
 	emptyY += dy;
 	emptyX += dx;
 
-	printf("After move print:\n");
+	printf("after:\n");
 	print();
 
 	return VALID_MOVE;
