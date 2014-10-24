@@ -71,7 +71,7 @@ main ()
 
 		if( n->steps < bestCount )
 		{
-			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
+			for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
 			{
 				Direction direction = Direction(dir);
 				s->push( new Node(n, direction, n->steps + 1 ));
