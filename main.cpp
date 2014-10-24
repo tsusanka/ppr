@@ -37,7 +37,7 @@ main ()
 		s->push( initialNode );
 	}
 
-	Node* bestFinalNode = NULL; // todo save only last Node?
+	Node* bestSolutionFinalNode = NULL;
 	int bestCount = q;
 
 	// ======== DEPTH-FIRST SEARCH ==========//
@@ -61,7 +61,7 @@ main ()
 			{
 				bestCount = n->steps;
 				printf("New solution found with %d steps\n", bestCount);
-				//TODO save best solution;
+				bestSolutionFinalNode = n;
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert one more time?
@@ -71,7 +71,7 @@ main ()
 
 		if( n->steps < bestCount )
 		{
-			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ ) // iterate over enum
+			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
 			{
 				Direction direction = Direction(dir);
 				s->push( new Node(n, direction, n->steps + 1 ));
@@ -87,6 +87,15 @@ main ()
 			}
 		}
 	}
-	// print all directions using last Node and its prevNodes
-	printf("End: best solution found with %d steps.\n", bestCount);
+
+	printf("==============================\n");
+	printf("End: best solution found with %d steps. Moves:\n", bestCount);
+	Node* node = bestSolutionFinalNode;
+	do
+	{
+		t->printDirectionSymbol(node->direction);
+		node = node->prevNode;
+	}
+	while (node != NULL);
+	printf("\n");
 }
