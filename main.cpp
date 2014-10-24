@@ -3,6 +3,8 @@
 #include <assert.h>
 #include "main.h"
 
+#define TOTAL_DIRECTION_COUNT 6
+
 main ()
 {
 	//======== INITIAL SETUP ===========//
@@ -42,66 +44,73 @@ main ()
 
 	// ======== DEPTH-FIRST SEARCH ==========//
 
+	Node* node = NULL;
 	while( s->getSize() > 0 )
 	{
-		Node* n = s->pop();
+		if( node && node->prevNode != NULL && node->prevNode->tries == TOTAL_DIRECTION_COUNT ) // all leafs are gone; time to revert the parent
+		{
+			t->move( t->oppositeDirection(node->prevNode->direction) ); // revert parent move
+		}
 
-		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
+		node = s->pop();
+		node->incrementTries();
+		if (node->prevNode)
+			printf("doting %d\n", node->prevNode->tries);
+
+		// if( node->prevNode != NULL && node->prevNode->direction == t->oppositeDirection(node->direction) ) // simple optimization, don't make moves there and back
+		// {
+			// node->incrementTries();
+			// continue;
+		// }
+
+		if( t->move(node->direction) == -1) // INVALID_MOVE
 			continue;
 
-		if( t->move(n->direction) == -1)  // INVALID_MOVE
-			continue;
-
-		printf("steps: %d\n", n->steps);
+		printf("steps: %d\n", node->steps);
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount);
-			if( n->steps <= bestCount )
+			printf("Sorted! Steps: %d; bestCount: %d\n", node->steps, bestCount);
+			if( node->steps <= bestCount )
 			{
-				bestCount = n->steps;
+				bestCount = node->steps;
 				printf("New solution found with %d steps\n", bestCount);
-				bestSolutionFinalNode = n;
+				bestSolutionFinalNode = node;
 			}
-			t->move( t->oppositeDirection(n->direction) ); // revert last move
+			t->move( t->oppositeDirection(node->direction) ); // revert last move
+			// node->incrementTries();
 			// todo revert one more time?
 			// foreach kamosi ktery maji stejny steps move opposite direction
 			continue;
 		}
 
-		if( n->steps < bestCount )
+		if( node->steps < bestCount )
 		{
-			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
+			for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
 			{
 				Direction direction = Direction(dir);
-				s->push( new Node(n, direction, n->steps + 1 ));
+				s->push( new Node(node, direction, node->steps + 1 ));
 			}
 		}
 		else
 		{
-			t->move( t->oppositeDirection(n->direction) ); // revert last move
-
-			// todo this probably doesn't work
-			if( s->top() != NULL && s->top()->steps < n->steps ) // dead-end
-			{
-				t->move( t->oppositeDirection(n->prevNode->direction) ); // revert parent move
-			}
+			t->move( t->oppositeDirection(node->direction) ); // revert last move
 		}
 	}
 
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
-	Node* node = bestSolutionFinalNode;
-	if (node == NULL)
+	Node* finalNode = bestSolutionFinalNode;
+	if (finalNode == NULL)
 	{
-		printf("Something is wrong; no solution found.\n"); // remove after fix
+		printf("Something is wrong; no solution found.\n"); // TODO remove after fix
 		return 1;
 	}
 	do
 	{
-		t->printDirectionSymbol(node->direction);
-		node = node->prevNode;
+		t->printDirectionSymbol(finalNode->direction); // TODO print in right order; non-reverse
+		finalNode = finalNode->prevNode;
 	}
-	while (node != NULL);
+	while (finalNode != NULL);
 	printf("\n");
 }
