@@ -64,8 +64,7 @@ main ()
 				bestSolutionFinalNode = n;
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
-			// todo revert one more time?
-			// foreach kamosi ktery maji stejny steps move opposite direction
+			// todo revert parent
 			continue;
 		}
 
@@ -81,7 +80,9 @@ main ()
 		{
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 
-			// todo this probably doesn't work
+			// todo this doesn't work because there is no gurantee on the top is the next parent
+			// it might help to insert this check before all 'continues'
+			// another note: will it work for the most right subtree?
 			if( s->top() != NULL && s->top()->steps < n->steps ) // dead-end
 			{
 				t->move( t->oppositeDirection(n->prevNode->direction) ); // revert parent move
