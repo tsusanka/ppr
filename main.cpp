@@ -1,7 +1,7 @@
 #include <stdio.h>
+#include <cstddef>
 #include <assert.h>
-#include "triangle.h"
-#include "stack.h"
+#include "main.h"
 
 main ()
 {
@@ -33,56 +33,60 @@ main ()
 	for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
 	{
 		Direction direction = Direction(dir);
-		Node initialNode = { NULL, direction, 0 }; // TODO:fix memory leak?
+		Node * initialNode = new Node(NULL, direction, 1);
 		s->push( initialNode );
 	}
 
-	// init best solution
-	Direction * bestSteps = new Direction[q];
+	Node* bestFinalNode = NULL; // todo save only last Node?
 	int bestCount = q;
 
 	// ======== DEPTH-FIRST SEARCH ==========//
 
 	while( s->getSize() > 0 )
 	{
-		Node n = s->pop();
+		Node* n = s->pop();
 
-		if( n.prevNode != NULL && n.prevNode->lastMove == t->oppositeDirection(n.lastMove) ) // simple optimization, don't make moves there and back
+		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
 			continue;
 
-		if( t->move(n.lastMove) == -1)  // INVALID_MOVE
+		if( t->move(n->direction) == -1)  // INVALID_MOVE
 			continue;
+
+		printf("steps: %d\n", n->steps);
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("Sorted! Steps: %d; bestCount: %d\n", n.steps, bestCount);
-			if( n.steps <= bestCount )
+			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount);
+			if( n->steps <= bestCount )
 			{
-				bestCount = n.steps;
+				bestCount = n->steps;
 				printf("New solution found with %d steps\n", bestCount);
 				//TODO save best solution;
 			}
-			t->move( t->oppositeDirection(n.lastMove) ); // revert last move
+			t->move( t->oppositeDirection(n->direction) ); // revert last move
+			// todo revert one more time?
+			// foreach kamosi ktery maji stejny steps move opposite direction
 			continue;
 		}
 
-		if( n.steps < bestCount )
+		if( n->steps < bestCount )
 		{
 			for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ ) // iterate over enum
 			{
 				Direction direction = Direction(dir);
-				Node newNode = { &n, direction, n.steps+1 }; // where do we deallocate this shit? TODO:fix memory leak
-				s->push(newNode);
+				s->push( new Node(n, direction, n->steps + 1 ));
 			}
-		}else{
-			t->move( t->oppositeDirection(n.lastMove) ); // revert last move
+		}
+		else
+		{
+			t->move( t->oppositeDirection(n->direction) ); // revert last move
 
-			if( s->top() != NULL_NODE && s->top().steps < n.steps ) // dead-end
+			if( s->top() != NULL && s->top()->steps < n->steps ) // dead-end
 			{
-				t->move( t->oppositeDirection(n.prevNode->lastMove) ); // revert parent move
+				t->move( t->oppositeDirection(n->prevNode->direction) ); // revert parent move
 			}
 		}
 	}
-	printf("End: best solution found with %d steps", bestCount);
-	scanf("%d", &q);
+	// print all directions using last Node and its prevNodes
+	printf("End: best solution found with %d steps.\n", bestCount);
 }

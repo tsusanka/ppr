@@ -1,11 +1,12 @@
 #include "stack.h"
+#include <cstddef>
 
 #define INIT_STACK_SIZE 500
 
 Stack::Stack( )
 {
 	capacity = INIT_STACK_SIZE;
-	nodes = new Node[capacity];
+	nodes = new Node*[capacity];
 	size = 0;
 }
 
@@ -14,22 +15,22 @@ Stack::~Stack( )
 	// TODO destroy
 }
 
-void Stack::push( Node n )
+void Stack::push( Node* n )
 {
 	nodes[ size++ ] = n;  //TODO check capacity and inflate the stack if necessary
 }
 
-Node Stack::pop( )
+Node* Stack::pop( )
 {
 	if( size == 0 )
-		return NULL_NODE;
+		return NULL;
 	return nodes[ --size ];
 }
 
-const Node Stack::top( )
+const Node* Stack::top( )
 {
 	if( size == 0 )
-		return NULL_NODE;
+		return NULL;
 	return nodes[ size - 1  ];
 }
 
