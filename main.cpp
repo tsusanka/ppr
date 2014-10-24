@@ -81,6 +81,7 @@ main ()
 		{
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 
+			// todo this probably doesn't work
 			if( s->top() != NULL && s->top()->steps < n->steps ) // dead-end
 			{
 				t->move( t->oppositeDirection(n->prevNode->direction) ); // revert parent move
@@ -91,6 +92,11 @@ main ()
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
 	Node* node = bestSolutionFinalNode;
+	if (node == NULL)
+	{
+		printf("Something is wrong; no solution found.\n"); // remove after fix
+		return 1;
+	}
 	do
 	{
 		t->printDirectionSymbol(node->direction);
