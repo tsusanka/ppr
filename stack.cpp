@@ -1,8 +1,9 @@
 #include "stack.h"
-#include <cstddef>
+#include <stdio.h>
 
-#define INIT_STACK_SIZE 500
 
+#define INIT_STACK_SIZE 15
+#define NULL 0;
 Stack::Stack( )
 {
 	capacity = INIT_STACK_SIZE;
@@ -17,7 +18,25 @@ Stack::~Stack( )
 
 void Stack::push( Node* n )
 {
-	nodes[ size++ ] = n;  //TODO check capacity and inflate the stack if necessary
+        if( size >= capacity - 1 ) //stack is full
+        {
+            expand();
+        }
+        nodes[ size++ ] = n;
+}
+
+void Stack::expand() 
+{
+    int oldSize = capacity;
+    capacity *= 1.5;
+    printf("Stack: new capacity: %d",capacity);
+    // realloc
+    Node** temp = new Node*[capacity];
+    for( int i = 0; i < oldSize; i++){
+        temp[i] = nodes[i];
+    }
+    delete [] nodes;
+    nodes = temp;
 }
 
 Node* Stack::pop( )

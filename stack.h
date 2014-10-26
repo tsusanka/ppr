@@ -8,7 +8,8 @@ class Stack
 		int capacity;
 		int size;
 		Node** nodes;
-
+                void expand();
+                
 	public:
 		Stack();
 		~Stack();
