@@ -6,6 +6,7 @@
 #define EMPTY 0
 #define INVALID_MOVE -1
 #define VALID_MOVE 0
+#define DEBUG false
 
 Triangle::Triangle(int s)
 {
@@ -162,8 +163,9 @@ int Triangle::move(Direction where, int dx, int dy) // direction only for printi
 	array[emptyX + dx][emptyY + dy] = EMPTY;
 	emptyY += dy;
 	emptyX += dx;
-
-	printMove(where);
+        if( DEBUG ) {
+            printMove(where);
+        }
 
 	return VALID_MOVE;
 }
@@ -239,16 +241,16 @@ void Triangle::printDirectionSymbolWin32(Direction dir)
 			printf("->");
 			break;
 		case BOTTOM_LEFT:
-			printf("\\.");
-			break;
-		case BOTTOM_RIGHT:
 			printf("./");
 			break;
+		case BOTTOM_RIGHT:
+			printf("\\.");
+			break;
 		case TOP_LEFT:
-			printf("/|");
+			printf("|\\");
 			break;
 		case TOP_RIGHT:
-			printf("|\\");
+			printf("/|");
 			break;
 		default:
 			printf("invalid direction");
@@ -259,10 +261,10 @@ void Triangle::printDirectionSymbolWin32(Direction dir)
 void Triangle::printMove(Direction where)
 {
 	printf("Moving ");
-	for (int i = 0; i < 10; ++i)
-	{
+//	for (int i = 0; i < 10; ++i)
+	//{
 		printDirectionSymbol(where);
-	}
+//	}
 	printf(" result:\n");
 	print();
 }

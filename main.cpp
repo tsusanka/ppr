@@ -3,15 +3,17 @@
 #include <assert.h>
 #include "main.h"
 
-main ()
+#define DEBUG false
+int main ()
 {
 	//======== INITIAL SETUP ===========//
 	int n = 0, q = 0;
 	printf("Enter triangle size (n): ");
 	scanf("%d", &n);
 	assert(n > 0);
+        
 	printf("Enter random steps count (q): ");
-	scanf("%d", &q);
+	scanf("%d", &q); 
 	assert(q > 0);
 
 	Triangle * t = new Triangle(n);
@@ -19,10 +21,11 @@ main ()
 	printf("Default triangle:\n");
 	t->print();
 
-	for( int i = 0; i < q; i++ )
+        for( int i = 0; i < q; i++ )
 	{
 		t->randomStep();
 	}
+
 	printf("Triangle after shuffle:\n");
 	t->print();
 	printf("==============================\n");
@@ -30,7 +33,7 @@ main ()
 	Stack * s = new Stack;
 
 	// first nodes inserted to stack
-	for ( int dir = TOP_LEFT; dir != BOTTOM_RIGHT; dir++ )
+	for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
 	{
 		Direction direction = Direction(dir);
 		Node * initialNode = new Node(NULL, direction, 1);
@@ -39,20 +42,37 @@ main ()
 
 	Node* bestSolutionFinalNode = NULL;
 	int bestCount = q;
-
+           
+        Node * lastNode = NULL;
 	// ======== DEPTH-FIRST SEARCH ==========//
 
 	while( s->getSize() > 0 )
 	{
 		Node* n = s->pop();
-
-		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
+                if( DEBUG ) {
+                    printf("\npopped: ");
+                    t->printDirectionSymbolWin32(n->direction);
+                    printf("\n");
+                }
+                
+                while( lastNode != NULL && n->steps < lastNode->steps){
+                        if( DEBUG ) printf("dead end, reverting parent\n");
+                        t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
+                        lastNode = lastNode->prevNode;
+                }
+                lastNode = n;
+                
+		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) {// simple optimization, don't make moves there and back
+                        if( DEBUG )  printf("opposite move, skipping\n");
 			continue;
+                }
 
-		if( t->move(n->direction) == -1)  // INVALID_MOVE
+		if( t->move(n->direction) == -1){  // INVALID_MOVE
+                        if( DEBUG ) printf("invalid move, skipping\n");
 			continue;
+                }
 
-		printf("steps: %d\n", n->steps);
+		if( DEBUG ) printf("steps: %d\n", n->steps);
 
 		if( t->isSorted() ) // this is a solution
 		{
@@ -70,6 +90,7 @@ main ()
 
 		if( n->steps < bestCount )
 		{
+                        if( DEBUG ) printf("inserting moves\n");
 			for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
 			{
 				Direction direction = Direction(dir);
@@ -78,15 +99,8 @@ main ()
 		}
 		else
 		{
+                        if( DEBUG ) printf("reverting move\n");
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
-
-			// todo this doesn't work because there is no gurantee on the top is the next parent
-			// it might help to insert this check before all 'continues'
-			// another note: will it work for the most right subtree?
-			if( s->top() != NULL && s->top()->steps < n->steps ) // dead-end
-			{
-				t->move( t->oppositeDirection(n->prevNode->direction) ); // revert parent move
-			}
 		}
 	}
 
@@ -105,4 +119,6 @@ main ()
 	}
 	while (node != NULL);
 	printf("\n");
+
+        return 0;
 }
