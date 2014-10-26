@@ -29,7 +29,7 @@ void Stack::expand()
 {
     int oldSize = capacity;
     capacity *= 1.5;
-    printf("Stack: new capacity: %d",capacity);
+    printf("Stack: new capacity: %d\n",capacity);
     // realloc
     Node** temp = new Node*[capacity];
     for( int i = 0; i < oldSize; i++){
