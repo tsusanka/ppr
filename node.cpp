@@ -10,8 +10,3 @@ Node::Node(Node* prevNode, Direction direction, int steps)
 	this->direction = direction;
 	this->steps = steps;
 }
-
-Node::~Node()
-{
-	// todo
-}

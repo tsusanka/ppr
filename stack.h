@@ -9,6 +9,7 @@ class Stack
 		int size;
 		Node** nodes;
 		void expand();
+		void destroy();
                 
 	public:
 		Stack();

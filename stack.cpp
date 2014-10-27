@@ -2,7 +2,10 @@
 #include <stdio.h>
 
 #define INIT_STACK_SIZE 15
+
+#ifndef NULL
 #define NULL 0;
+#endif
 
 Stack::Stack( )
 {
@@ -11,9 +14,14 @@ Stack::Stack( )
 	size = 0;
 }
 
+void Stack::destroy( )
+{
+	delete [] nodes;
+}
+
 Stack::~Stack( )
 {
-	// TODO destroy
+	destroy();
 }
 
 void Stack::push( Node* n )
@@ -27,17 +35,17 @@ void Stack::push( Node* n )
 
 void Stack::expand()
 {
-	int oldSize = capacity;
-	capacity *= 1.5;
-	printf("Stack: new capacity: %d\n", capacity);
+	int newSize = capacity * 1.5;
+	printf("Stack: new capacity: %d\n", newSize);
 	// realloc
-	Node** temp = new Node*[capacity];
-	for( int i = 0; i < oldSize; i++)
+	Node** temp = new Node*[newSize];
+	for( int i = 0; i < capacity; i++)
 	{
 		temp[i] = nodes[i];
 	}
-	delete [] nodes;
+	destroy();
 	nodes = temp;
+	capacity = newSize;
 }
 
 Node* Stack::pop( )

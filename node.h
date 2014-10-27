@@ -8,7 +8,6 @@ class Node
 
 	public:
 		Node(Node* prevNode, Direction direction, int steps);
-		~Node();
 		Node* prevNode;
 		Direction direction;
 		int steps;

@@ -4,6 +4,7 @@
 #include "main.h"
 
 #define DEBUG false
+
 int main ()
 {
 	//======== INITIAL SETUP ===========//
@@ -42,13 +43,14 @@ int main ()
 
 	Node* bestSolutionFinalNode = NULL;
 	int bestCount = q;
-           
+
 	Node * lastNode = NULL;
 	// ======== DEPTH-FIRST SEARCH ==========//
 
 	while( s->getSize() > 0 )
 	{
 		Node* n = s->pop();
+
 		if( DEBUG )
 		{
 			printf("\npopped: ");
@@ -123,6 +125,9 @@ int main ()
 	}
 	while (node != NULL);
 	printf("\n");
+
+	delete s;
+	delete t;
 
 	return 0;
 }
