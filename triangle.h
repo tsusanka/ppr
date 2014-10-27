@@ -27,5 +27,5 @@ class Triangle
 		bool isSorted();
 		int getDistanceX();
 		void printDirectionSymbol(Direction dir);
-                void printDirectionSymbolWin32(Direction dir);
+		void printDirectionSymbolWin32(Direction dir);
 };

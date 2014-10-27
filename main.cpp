@@ -11,9 +11,9 @@ int main ()
 	printf("Enter triangle size (n): ");
 	scanf("%d", &n);
 	assert(n > 0);
-        
+
 	printf("Enter random steps count (q): ");
-	scanf("%d", &q); 
+	scanf("%d", &q);
 	assert(q > 0);
 
 	Triangle * t = new Triangle(n);
@@ -21,7 +21,7 @@ int main ()
 	printf("Default triangle:\n");
 	t->print();
 
-        for( int i = 0; i < q; i++ )
+	for( int i = 0; i < q; i++ )
 	{
 		t->randomStep();
 	}
@@ -43,34 +43,38 @@ int main ()
 	Node* bestSolutionFinalNode = NULL;
 	int bestCount = q;
            
-        Node * lastNode = NULL;
+	Node * lastNode = NULL;
 	// ======== DEPTH-FIRST SEARCH ==========//
 
 	while( s->getSize() > 0 )
 	{
 		Node* n = s->pop();
-                if( DEBUG ) {
-                    printf("\npopped: ");
-                    t->printDirectionSymbolWin32(n->direction);
-                    printf("\n");
-                }
-                
-                while( lastNode != NULL && n->steps < lastNode->steps){
-                        if( DEBUG ) printf("dead end, reverting parent\n");
-                        t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
-                        lastNode = lastNode->prevNode;
-                }
-                lastNode = n;
-                
-		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) {// simple optimization, don't make moves there and back
-                        if( DEBUG )  printf("opposite move, skipping\n");
-			continue;
-                }
+		if( DEBUG )
+		{
+			printf("\npopped: ");
+			t->printDirectionSymbolWin32(n->direction);
+			printf("\n");
+		}
 
-		if( t->move(n->direction) == -1){  // INVALID_MOVE
-                        if( DEBUG ) printf("invalid move, skipping\n");
+		while( lastNode != NULL && n->steps < lastNode->steps)
+		{
+			if( DEBUG ) printf("dead end, reverting parent\n");
+			t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
+			lastNode = lastNode->prevNode;
+		}
+		lastNode = n;
+
+		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
+		{
+			if( DEBUG ) printf("opposite move, skipping\n");
 			continue;
-                }
+		}
+
+		if( t->move(n->direction) == -1) // INVALID_MOVE
+		{
+			if( DEBUG ) printf("invalid move, skipping\n");
+			continue;
+		}
 
 		if( DEBUG ) printf("steps: %d\n", n->steps);
 
@@ -90,7 +94,7 @@ int main ()
 
 		if( n->steps < bestCount )
 		{
-                        if( DEBUG ) printf("inserting moves\n");
+			if( DEBUG ) printf("inserting moves\n");
 			for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
 			{
 				Direction direction = Direction(dir);
@@ -99,7 +103,7 @@ int main ()
 		}
 		else
 		{
-                        if( DEBUG ) printf("reverting move\n");
+			if( DEBUG ) printf("reverting move\n");
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 		}
 	}
@@ -120,5 +124,5 @@ int main ()
 	while (node != NULL);
 	printf("\n");
 
-        return 0;
+	return 0;
 }
