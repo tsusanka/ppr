@@ -4,6 +4,7 @@
 #include "main.h"
 
 #define DEBUG false
+#define WINDOWS false
 
 int main ()
 {
@@ -54,7 +55,7 @@ int main ()
 		if( DEBUG )
 		{
 			printf("\npopped: ");
-			t->printDirectionSymbolWin32(n->direction);
+			t->printDirectionSymbol(n->direction);
 			printf("\n");
 		}
 

@@ -48,7 +48,7 @@ void Stack::expand()
 	{
 		temp[i] = nodes[i];
 	}
-	destroy();
+	delete [] nodes;
 	nodes = temp;
 	capacity = newSize;
 }
