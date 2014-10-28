@@ -1,4 +1,8 @@
+#ifndef NODE_H
+#define NODE_H
 #include "node.h"
+#endif
+
 #ifndef DIRECTION_H
 #define DIRECTION_H
 #include "direction.h"

@@ -131,7 +131,7 @@ Direction Triangle::oppositeDirection(Direction dir)
 		case TOP_LEFT: return BOTTOM_RIGHT;
 		case TOP_RIGHT: return BOTTOM_LEFT;
 		default:
-			printf("Invalid direction");
+			printf("Triangle::oppositeDirection error: Invalid direction, %d", dir);
 			throw -1;
 	}
 }

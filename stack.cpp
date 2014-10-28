@@ -16,6 +16,11 @@ Stack::Stack( )
 
 void Stack::destroy( )
 {
+	printf("deleting capacity: %d \n", capacity);
+	for (int i = 0; i < capacity; i++)
+	{
+		delete nodes[i];
+	}
 	delete [] nodes;
 }
 
