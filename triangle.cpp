@@ -134,6 +134,7 @@ Direction Triangle::oppositeDirection(Direction dir)
 			printf("Triangle::oppositeDirection error: Invalid direction, %d", dir);
 			throw -1;
 	}
+        return RIGHT;
 }
 
 int Triangle::move(Direction where)
