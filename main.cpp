@@ -156,7 +156,7 @@ int main( int argc, char** argv )
 
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
-	for( int i = 0; i < bestCount; i++ )
+	for( int i = bestCount - 1; i >= 0; i-- )
 	{
 		t->printDirectionSymbol(bestSolution[i]);
 	}
