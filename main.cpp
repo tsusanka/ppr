@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <cstddef>
 #include <assert.h>
 #include "main.h"
@@ -24,16 +25,27 @@ void copySolution( Direction * where, Node * from )
 	while (node != NULL);
 }
 
-int main ()
+int main( int argc, char** argv )
 {
-	//======== INITIAL SETUP ===========//
+	if (argc != 3)
+	{
+		printf("not enough or too much arguments\n");
+		return 1;
+	}
+
 	int n = 0, q = 0;
-	printf("Enter triangle size (n): ");
-	scanf("%d", &n);
+	if (sscanf (argv[1], "%i", &n) != 1)
+	{
+		printf("error - not an integer\n");
+		return 2;
+	}
 	assert(n > 0);
 
-	printf("Enter random steps count (q): ");
-	scanf("%d", &q);
+	if (sscanf (argv[2], "%i", &q) != 1)
+	{
+		printf("error - not an integer\n");
+		return 3;
+	}
 	assert(q > 0);
 
 	Triangle * t = new Triangle(n);
@@ -146,12 +158,14 @@ int main ()
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
 	for( int i = 0; i < bestCount; i++ )
 	{
-		t->printDirectionSymbol( bestSolution[i] ); 
+		t->printDirectionSymbol(bestSolution[i]);
 	}
+	delete [] bestSolution;
 	printf("\n");
 
 	delete s;
 	delete t;
+	delete lastNode;
 
 	return 0;
 }
