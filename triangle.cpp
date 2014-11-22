@@ -1,7 +1,8 @@
 #include "triangle.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h> 
+#include <time.h>
+#include <string>
 
 #define EMPTY 0
 #define INVALID_MOVE -1
@@ -242,4 +243,18 @@ void Triangle::printMove(Direction where)
 //	}
 	printf(" result:\n");
 	print();
+}
+
+std::string Triangle::convertToString()
+{
+	std::string string;
+	for (int i = 0; i < size; i++)
+	{
+		for (int y = 0; y <= i; y++)
+		{
+			string += std::to_string(array[i][y]);
+			string += "|";
+		}
+	}
+	return string;
 }

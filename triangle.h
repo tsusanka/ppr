@@ -2,6 +2,7 @@
 #define DIRECTION_H
 #include "direction.h"
 #endif
+#include <string>
 
 class Triangle
 {
@@ -28,4 +29,5 @@ class Triangle
 		int getDistanceX();
 		void printDirectionSymbol(Direction dir);
 		void printDirectionSymbolWin32(Direction dir);
+		std::string convertToString();
 };
