@@ -5,7 +5,8 @@
 #include "main.h"
 
 #define DEBUG false
-#define WINDOWS false
+//#define WINDOWS false
+#define LENGTH 100
 
 void copySolution( Direction * where, Node * from )
 {
@@ -27,41 +28,85 @@ void copySolution( Direction * where, Node * from )
 
 int main( int argc, char** argv )
 {
-	if (argc != 3)
-	{
-		printf("not enough or too much arguments\n");
-		return 1;
-	}
+    
+        /* MPI VARIABLES */
+        int my_rank;
+        
+        int numberOfProcessors;
+        
+        char message[LENGTH];
+        /* start up MPI */
+        MPI_Init( &argc, &argv );
 
-	int n = 0, q = 0;
-	if (sscanf (argv[1], "%i", &n) != 1)
-	{
-		printf("error - not an integer\n");
-		return 2;
-	}
-	assert(n > 0);
+        /* find out process rank */
+        MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-	if (sscanf (argv[2], "%i", &q) != 1)
-	{
-		printf("error - not an integer\n");
-		return 3;
-	}
-	assert(q > 0);
+        /* find out number of processes */
+        MPI_Comm_size(MPI_COMM_WORLD, &numberOfProcessors);
+  
+        
+        /* Sequential Variables */
+        int bestCount;
+        Triangle * t;
+        
+        if( my_rank == 0 ){
+                //INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
+                if (argc != 3)
+                {
+                        printf("not enough or too much arguments\n");
+                        return 1;
+                }
 
-	Triangle * t = new Triangle(n);
-	t->fill();
-	printf("Default triangle:\n");
-	t->print();
+                int n = 0, q = 0;
+                if (sscanf (argv[1], "%i", &n) != 1)
+                {
+                        printf("error - not an integer\n");
+                        return 2;
+                }
+                assert(n > 0);
 
-	for( int i = 0; i < q; i++ )
-	{
-		t->randomStep();
-	}
+                if (sscanf (argv[2], "%i", &q) != 1)
+                {
+                        printf("error - not an integer\n");
+                        return 3;
+                }
+                assert(q > 0);
 
-	printf("Triangle after shuffle:\n");
-	t->print();
-	printf("==============================\n");
+                t = new Triangle(n);
+                t->fill();
+                printf("Default triangle:\n");
+                t->print();
 
+                for( int i = 0; i < q; i++ )
+                {
+                        t->randomStep();
+                }
+
+                printf("Triangle after shuffle:\n");
+                t->print();
+                printf("==============================\n");
+                
+                // SEND
+                for (int source=1;source<p;) {
+                    MPI_Send( message, strlen(message)+1, MPI_CHAR, dest, tag, MPI_COMM_WORLD );
+                }
+                
+                bestCount = q;
+                
+        }else{
+                MPI_Status status;
+                int flag = 0;
+                //WAIT FOR SHUFFLED TRIANGLE
+                while (!flag){
+                    MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status); //busy waiting(?)
+                }
+                MPI_Recv( &message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+                printf ("%s\n",message);
+                
+                // parse message
+                t = 0// PARSE TRIANGLE
+                bestCount = 8;// PARSE NUMBER OF SHUFFLES;
+        }
 	Stack * s = new Stack;
 
 	// first nodes inserted to stack
@@ -71,9 +116,9 @@ int main( int argc, char** argv )
 		Node * initialNode = new Node(NULL, direction, 1);
 		s->push( initialNode );
 	}
-
-	
-	int bestCount = q;
+        
+        
+	int toInitialSend = myRank == 0 ? numberOfProcessors-1 : 0;
 	Direction * bestSolution = new Direction[bestCount];
 
 	Node * lastNode = new Node(NULL, RIGHT, 1);
@@ -139,12 +184,17 @@ int main( int argc, char** argv )
 
 		if( n->steps < bestCount )
 		{
-			if( DEBUG ) printf("inserting moves\n");
-			for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
-			{
-				Direction direction = Direction(dir);
-				s->push( new Node(n, direction, n->steps + 1 ));
-			}
+                        if( toInitialSend > 0 ){
+                            //SEND THIS NODE TO PROCESSOR P
+                            toInitialSend--;
+                        }else{
+                            if( DEBUG ) printf("inserting moves\n");
+                            for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
+                            {
+                                    Direction direction = Direction(dir);
+                                    s->push( new Node(n, direction, n->steps + 1 ));
+                            }
+                        }
 		}
 		else
 		{
