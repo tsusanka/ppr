@@ -82,7 +82,7 @@ int main( int argc, char** argv )
 	while( s->getSize() > 0 )
 	{
 		Node* n = s->pop();
-                
+
 		if( DEBUG )
 		{
 			printf("\npopped: ");
