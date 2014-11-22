@@ -7,6 +7,13 @@
 #define DEBUG false
 //#define WINDOWS false
 #define LENGTH 100
+#define CHECK_MSG_AMOUNT  100
+
+#define MSG_WORK_REQUEST 1000
+#define MSG_WORK_SENT    1001
+#define MSG_WORK_NOWORK  1002
+#define MSG_TOKEN        1003
+#define MSG_FINISH       1004
 
 void copySolution( Direction * where, Node * from )
 {
@@ -118,14 +125,52 @@ int main( int argc, char** argv )
 	}
         
         
-	int toInitialSend = myRank == 0 ? numberOfProcessors-1 : 0;
+	int toInitialSend = my_rank == 0 ? numberOfProcessors-1 : 0;
 	Direction * bestSolution = new Direction[bestCount];
 
 	Node * lastNode = new Node(NULL, RIGHT, 1);
+        
+        int checkMsgCounter = 0;
+        
 	// ======== DEPTH-FIRST SEARCH ==========//
 
 	while( s->getSize() > 0 )
-	{
+	{   
+                if ((checkMsgCounter % CHECK_MSG_AMOUNT)==0)
+                {
+                        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+                        if (flag)
+                        {
+                                //prisla zprava, je treba ji obslouzit
+                                //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
+                                //a pripadne cislo chyby (status.MPI_ERROR)
+                                switch (status.MPI_TAG)
+                                {
+                                   case MSG_WORK_REQUEST : // zadost o praci, prijmout a dopovedet
+                                                           // zaslat rozdeleny zasobnik a nebo odmitnuti MSG_WORK_NOWORK
+                                                           break;
+                                   case MSG_WORK_SENT : // prisel rozdeleny zasobnik, prijmout
+                                                        // deserializovat a spustit vypocet
+                                                        break;
+                                   case MSG_WORK_NOWORK : // odmitnuti zadosti o praci
+                                                          // zkusit jiny proces
+                                                          // a nebo se prepnout do pasivniho stavu a cekat na token
+                                                          break
+                                   case MSG_TOKEN : //ukoncovaci token, prijmout a nasledne preposlat
+                                                    // - bily nebo cerny v zavislosti na stavu procesu
+                                                    break;
+                                   case MSG_FINISH : //konec vypoctu - proces 0 pomoci tokenu zjistil, ze jiz nikdo nema praci
+                                                     //a rozeslal zpravu ukoncujici vypocet
+                                                     //mam-li reseni, odeslu procesu 0
+                                                     //nasledne ukoncim spoji cinnost
+                                                     //jestlize se meri cas, nezapomen zavolat koncovou barieru MPI_Barrier (MPI_COMM_WORLD)
+                                                     MPI_Finalize();
+                                                     exit (0);
+                                                     break;
+                                   default : printf("neznamy typ zpravy!\n"); break;
+                              }
+                        }
+                }
 		Node* n = s->pop();
 
 		if( DEBUG )
@@ -202,8 +247,9 @@ int main( int argc, char** argv )
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			delete n;
 		}
+                
 	}
-
+               
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
 	for( int i = bestCount - 1; i >= 0; i-- )
