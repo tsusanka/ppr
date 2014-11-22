@@ -40,6 +40,8 @@ int main( int argc, char** argv )
 	int numberOfProcessors;
 	char message[LENGTH];
 	int tag = 1;
+	int flag;
+	MPI_Status status;
 
 	/* start up MPI */
 	MPI_Init(&argc, &argv);
@@ -158,7 +160,7 @@ int main( int argc, char** argv )
                                    case MSG_WORK_NOWORK : // odmitnuti zadosti o praci
                                                           // zkusit jiny proces
                                                           // a nebo se prepnout do pasivniho stavu a cekat na token
-                                                          break
+                                                          break;
                                    case MSG_TOKEN : //ukoncovaci token, prijmout a nasledne preposlat
                                                     // - bily nebo cerny v zavislosti na stavu procesu
                                                     break;
