@@ -56,11 +56,11 @@ int main( int argc, char** argv )
 	Triangle * t;
 	unsigned int microseconds = 100000;
 
-	printf("Starting, there are %d processors. \n", numberOfProcessors);
 	printf("Hello i am CPU #%d. \n", my_rank);
 
 	if( my_rank == 0 )
 	{
+		printf("There are %d processors. \n", numberOfProcessors);
 		//INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
 		if (argc != 3)
 		{
@@ -98,7 +98,7 @@ int main( int argc, char** argv )
 		printf("==============================\n");
 
 		// SEND
-		const char * message = t->convertToString().c_str();
+		char * message = t->packToBuffer();
 		for (int destination = 1; destination < numberOfProcessors; )
 		{
 			MPI_Send( (void*) message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );

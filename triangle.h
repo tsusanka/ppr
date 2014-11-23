@@ -29,5 +29,6 @@ class Triangle
 		int getDistanceX();
 		void printDirectionSymbol(Direction dir);
 		void printDirectionSymbolWin32(Direction dir);
-		std::string convertToString();
+		char* packToBuffer();
+		void unpackFromBuffer();
 };

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string>
+#include "mpi.h"
 
 #define EMPTY 0
 #define INVALID_MOVE -1
@@ -245,16 +246,16 @@ void Triangle::printMove(Direction where)
 	print();
 }
 
-std::string Triangle::convertToString()
+char* Triangle::packToBuffer()
 {
-	std::string string;
+	char* buffer = new char[1000];
+	int position = 0;
 	for (int i = 0; i < size; i++)
 	{
 		for (int y = 0; y <= i; y++)
 		{
-			string += std::to_string(array[i][y]);
-			string += "|";
+			MPI_Pack(&array[i][y], 1, MPI_INT, buffer, 1000, &position, MPI_COMM_WORLD);
 		}
 	}
-	return string;
+	return buffer;
 }
