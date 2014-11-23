@@ -54,6 +54,8 @@ int main( int argc, char** argv )
 	int bestCount;
 	Triangle * t;
 
+	printf("Hello i am CPU #%d. \n", my_rank);
+
 	if( my_rank == 0 )
 	{
 		//INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
