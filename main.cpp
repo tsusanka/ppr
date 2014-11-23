@@ -42,6 +42,7 @@ int main( int argc, char** argv )
 	int tag = 1;
 	int flag;
 	MPI_Status status;
+	int position = 0;
 
 	/* start up MPI */
 	MPI_Init(&argc, &argv);
@@ -100,10 +101,10 @@ int main( int argc, char** argv )
 		printf("==============================\n");
 
 		// SEND
-		char * message = t->pack();
+		char * message = t->pack(&position);
 		for (int destination = 1; destination < numberOfProcessors; )
 		{
-			MPI_Send( (void*) message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );
+			MPI_Send( (void*) message, position, MPI_PACKED, destination, tag, MPI_COMM_WORLD );
 			destination++;
 		}
 
@@ -122,7 +123,7 @@ int main( int argc, char** argv )
 		t = new Triangle(n);
 
 		char message[LENGTH]; // todo: dynamic length?
-		MPI_Recv( &message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 		t->unpack(message);
 
 		printf("proc #%d", my_rank);

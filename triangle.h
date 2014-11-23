@@ -29,6 +29,6 @@ class Triangle
 		int getDistanceX();
 		void printDirectionSymbol(Direction dir);
 		void printDirectionSymbolWin32(Direction dir);
-		char* pack();
+		char* pack(int* position);
 		void unpack(char* buffer);
 };

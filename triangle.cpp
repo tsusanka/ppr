@@ -251,16 +251,15 @@ void Triangle::printMove(Direction where)
 	print();
 }
 
-char* Triangle::pack()
+char* Triangle::pack(int* position)
 {
 	char* buffer = new char[LENGTH];
-	int position = 0;
 	for (int i = 0; i < size; i++)
 	{
 		for (int y = 0; y <= i; y++)
 		{
 			int a = array[i][y];
-			MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+			MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, position, MPI_COMM_WORLD);
 		}
 	}
 	return buffer;
