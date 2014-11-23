@@ -259,7 +259,8 @@ char* Triangle::pack()
 	{
 		for (int y = 0; y <= i; y++)
 		{
-			MPI_Pack(&array[i][y], 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+			int a = array[i][y];
+			MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
 		}
 	}
 	return buffer;
