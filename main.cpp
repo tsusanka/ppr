@@ -6,7 +6,6 @@
 #include "main.h"
 
 #define DEBUG false
-#define LENGTH 100
 #define CHECK_MSG_AMOUNT  100
 
 #define MSG_WORK_REQUEST 1000
@@ -38,7 +37,6 @@ int main( int argc, char** argv )
 	/* MPI VARIABLES */
 	int my_rank;
 	int numberOfProcessors;
-	char message[LENGTH];
 	int tag = 1;
 	int flag;
 	MPI_Status status;
@@ -95,9 +93,9 @@ int main( int argc, char** argv )
 		printf("==============================\n");
 
 		// SEND
+		const char * message = t->convertToString().c_str();
 		for (int destination = 1; destination < numberOfProcessors; )
 		{
-			const char * c = t->convertToString().c_str();
 			MPI_Send( message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );
 			destination++;
 		}
@@ -113,13 +111,16 @@ int main( int argc, char** argv )
 		{
 			MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status); //busy waiting(?)
 		}
-		MPI_Recv( &message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		char message[1000]; // todo: what length?
+		MPI_Recv( &message, 1000, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 		printf ("%s\n",message);
 
 		// parse message
 		t = 0; // PARSE TRIANGLE
 		bestCount = 8;// PARSE NUMBER OF SHUFFLES;
 	}
+	MPI_Finalize();
+	return 0;
 	Stack * s = new Stack;
 
 	// first nodes inserted to stack
