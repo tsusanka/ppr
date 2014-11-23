@@ -34,6 +34,10 @@ void Triangle::init()
 		int *row;
 		row = new int[i + 1];
 		array[i] = row;
+		for (int y = 0; y <= i; y++)
+		{
+			array[i][y] = 0;
+		}
 	}
 }
 
