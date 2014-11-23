@@ -275,6 +275,7 @@ void Triangle::unpack(char* buffer)
 		for (int y = 0; y <= i; y++)
 		{
 			MPI_Unpack(buffer, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
+                        printf("unpack i %d y %d, number %d \n", i, y, number);
 			array[i][y] = number;
 		}
 	}
