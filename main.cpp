@@ -57,7 +57,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message ){
     	int position = 0;
 	int number;
         Direction direction;
-        Node lastNode;
+        Node * lastNode;
         int i = 1;
         while(true)
         {
@@ -70,14 +70,14 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message ){
                 if( result == -1 ){
                     printf("fillStackFromMessage>Invalid MOVE recieved:%d",number);
                 }
-                Node * n = new Node();
+                Node * n = new Node(lastNode, direction, i++);
                 n->direction = direction;
                 n->prevNode = lastNode;
                 n->steps = i++;
                 
                 lastNode = n;
         }
-        t->move( t->oppositeDirection(lastNode.direction) ); //revert the last move, becasuse it will be done after it is popped from the stack
+        t->move( t->oppositeDirection(lastNode->direction) ); //revert the last move, becasuse it will be done after it is popped from the stack
         s->push(lastNode);
 }
 
@@ -280,7 +280,8 @@ int tokenState(Stack * s, Triangle * t)
 
 int main( int argc, char** argv )
 {
-        srand(time(NULL));
+    srand(time(NULL));
+
 	/* MPI VARIABLES */
 	int my_rank;
 	int numberOfProcessors;
