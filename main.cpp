@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "mpi.h"
 #include "main.h"
+#include <unistd.h>
 
 #define DEBUG false
 #define CHECK_MSG_AMOUNT  100
@@ -53,6 +54,7 @@ int main( int argc, char** argv )
 	/* Sequential Variables */
 	int bestCount;
 	Triangle * t;
+	unsigned int microseconds = 100000;
 
 	printf("Starting, there are %d processors. \n", numberOfProcessors);
 	printf("Hello i am CPU #%d. \n", my_rank);
@@ -122,6 +124,7 @@ int main( int argc, char** argv )
 		t = 0; // PARSE TRIANGLE
 		bestCount = 8;// PARSE NUMBER OF SHUFFLES;
 	}
+	usleep(microseconds);
 	MPI_Finalize();
 	return 0;
 	Stack * s = new Stack;
