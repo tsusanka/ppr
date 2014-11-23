@@ -9,6 +9,7 @@
 #define INVALID_MOVE -1
 #define VALID_MOVE 0
 #define DEBUG false
+#define LENGTH 1000
 
 Triangle::Triangle(int s)
 {
@@ -24,10 +25,10 @@ Triangle::~Triangle()
 void Triangle::init()
 {
 	array = new int*[size];
-	
+
 	/* initialize random seed: */
 	srand (time(NULL));
-	
+
 	for (int i = 0; i < size; i++)
 	{
 		int *row;
@@ -246,16 +247,30 @@ void Triangle::printMove(Direction where)
 	print();
 }
 
-char* Triangle::packToBuffer()
+char* Triangle::pack()
 {
-	char* buffer = new char[1000];
+	char* buffer = new char[LENGTH];
 	int position = 0;
 	for (int i = 0; i < size; i++)
 	{
 		for (int y = 0; y <= i; y++)
 		{
-			MPI_Pack(&array[i][y], 1, MPI_INT, buffer, 1000, &position, MPI_COMM_WORLD);
+			MPI_Pack(&array[i][y], 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
 		}
 	}
 	return buffer;
+}
+
+void Triangle::unpack(char* buffer)
+{
+	int position = 0;
+	int number;
+	for (int i = 0; i < size; i++)
+	{
+		for (int y = 0; y <= i; y++)
+		{
+			MPI_Unpack(buffer, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
+			array[i][y] = number;
+		}
+	}
 }

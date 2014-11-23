@@ -8,6 +8,7 @@
 
 #define DEBUG false
 #define CHECK_MSG_AMOUNT  100
+#define LENGTH 1000
 
 #define MSG_WORK_REQUEST 1000
 #define MSG_WORK_SENT    1001
@@ -56,32 +57,33 @@ int main( int argc, char** argv )
 	Triangle * t;
 	unsigned int microseconds = 100000;
 
-	printf("Hello i am CPU #%d. \n", my_rank);
+	if (argc != 3)
+	{
+		printf("not enough or too much arguments\n");
+		return 1;
+	}
+
+	int n = 0, q = 0;
+	if (sscanf (argv[1], "%i", &n) != 1)
+	{
+		printf("error - not an integer\n");
+		return 2;
+	}
+	assert(n > 0);
+
+	if (sscanf (argv[2], "%i", &q) != 1)
+	{
+		printf("error - not an integer\n");
+		return 3;
+	}
+	assert(q > 0);
+
+	printf("Hello i am CPU #%d. q is %d, n is %d \n", my_rank, q, n);
 
 	if( my_rank == 0 )
 	{
 		printf("There are %d processors. \n", numberOfProcessors);
 		//INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
-		if (argc != 3)
-		{
-			printf("not enough or too much arguments\n");
-			return 1;
-		}
-
-		int n = 0, q = 0;
-		if (sscanf (argv[1], "%i", &n) != 1)
-		{
-			printf("error - not an integer\n");
-			return 2;
-		}
-		assert(n > 0);
-
-		if (sscanf (argv[2], "%i", &q) != 1)
-		{
-			printf("error - not an integer\n");
-			return 3;
-		}
-		assert(q > 0);
 
 		t = new Triangle(n);
 		t->fill();
@@ -98,7 +100,7 @@ int main( int argc, char** argv )
 		printf("==============================\n");
 
 		// SEND
-		char * message = t->packToBuffer();
+		char * message = t->pack();
 		for (int destination = 1; destination < numberOfProcessors; )
 		{
 			MPI_Send( (void*) message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );
@@ -116,9 +118,16 @@ int main( int argc, char** argv )
 		{
 			MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status); //busy waiting(?)
 		}
-		char message[1000]; // todo: what length?
-		MPI_Recv( &message, 1000, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-		printf ("%s\n",message);
+
+		t = new Triangle(n);
+
+		char message[LENGTH]; // todo: dynamic length?
+		MPI_Recv( &message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		t->unpack(message);
+
+		printf("proc #%d", my_rank);
+		t->print();
+		printf("\n");
 
 		// parse message
 		t = 0; // PARSE TRIANGLE
