@@ -5,5 +5,6 @@ enum Direction
 	LEFT,
 	RIGHT,
 	BOTTOM_LEFT,
-	BOTTOM_RIGHT
+	BOTTOM_RIGHT,
+        NONE
 };

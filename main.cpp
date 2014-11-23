@@ -34,6 +34,188 @@ void copySolution( Direction * where, Node * from )
 	while (node != NULL);
 }
 
+Direction * getPath(Node * lastNode){
+        Direction * result = new Direction[LENGTH];
+    	int i = 0;
+	do
+	{
+		result[i++] = lastNode->direction;
+		lastNode = lastNode->prevNode;
+	}
+	while (lastNode != NULL);
+        result[i] = NONE;
+        return result;
+}
+
+void fillStackFromMessage( Stack * s, Triangle * t, char * message ){
+    	int position = 0;
+	int number;
+        for (int y = 0; y <= i; y++)
+        {
+                MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
+                t->move ( (Direction) number ); 
+        }
+}
+
+void workState( Stack * s, int toInitialSend, int myRank ) {
+    int checkMsgCounter = 0;
+    int tag = 1;
+    int flag;
+    MPI_Status status;
+
+    if( myRank != 0) {
+        while{
+            MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
+            MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+            //unpack data
+        }
+    }
+    
+    // ======== DEPTH-FIRST SEARCH ==========//
+    
+    while( s->getSize() > 0 )
+	{   
+                if ((checkMsgCounter++ % CHECK_MSG_AMOUNT)==0)
+                {
+                        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+                        if (flag)
+                        {
+                                //prisla zprava, je treba ji obslouzit
+                                //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
+                                //a pripadne cislo chyby (status.MPI_ERROR)
+                                switch (status.MPI_TAG)
+                                {
+                                   case MSG_WORK_REQUEST : // send work
+                                                           break;
+                                   case MSG_TOKEN : // send black token
+                                                    break;
+                                   default : printf("neznamy typ zpravy!\n"); break;
+                              }
+                        }
+                }
+		Node* n = s->pop();
+
+		if( DEBUG )
+		{
+			printf("\npopped: ");
+			t->printDirectionSymbol(n->direction);
+			printf("\n");
+		}
+
+		while( lastNode->prevNode != NULL && n->steps < lastNode->steps)
+		{
+			if( DEBUG ) printf("dead end, reverting parent\n");
+			t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
+
+			Node * lastNodePrevNode = lastNode->prevNode;
+			lastNode->direction = lastNodePrevNode->direction;   // lastNode = lastNodePrevNode
+			lastNode->steps = lastNodePrevNode->steps;
+			lastNode->prevNode = lastNodePrevNode->prevNode;
+			delete lastNodePrevNode;
+		}
+
+
+		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
+		{
+			if( DEBUG ) printf("opposite move, skipping\n");
+			delete n;
+			continue;
+		}
+
+		if( t->move(n->direction) == -1) // INVALID_MOVE
+		{
+			if( DEBUG ) printf("invalid move, skipping\n");
+			delete n;
+			continue;
+		}
+
+		lastNode->direction = n->direction;  // lastNode = lastNode->prevNode
+		lastNode->prevNode = n->prevNode;
+		lastNode->steps = n->steps;
+
+		if( DEBUG ) printf("steps: %d\n", n->steps);
+
+		if( t->isSorted() ) // this is a solution
+		{
+			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount);
+			if( n->steps <= bestCount )
+			{
+				bestCount = n->steps;
+				printf("New solution found with %d steps\n", bestCount);
+				copySolution( bestSolution, n);
+			}
+			t->move( t->oppositeDirection(n->direction) ); // revert last move
+			// todo revert parent
+			continue;
+		}
+
+		if( n->steps < bestCount )
+		{
+                        if( toInitialSend > 0 ){
+                            //SEND THIS NODE TO PROCESSOR P
+                            char * buffer = new char[LENGTH];
+                            int position = 0;
+                            Direction * result = getPath(n);
+                            int ri = 0;
+                            do
+                            {
+                                    int a = (int) result[ri++];
+                                    MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+                            }while( result[ri] != NONE);
+                            MPI_Send( (void*) buffer, position, MPI_PACKED, toInitialSend, MSG_WORK_SENT, MPI_COMM_WORLD );
+                            toInitialSend--;
+                        }else{
+                            if( DEBUG ) printf("inserting moves\n");
+                            for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
+                            {
+                                    Direction direction = Direction(dir);
+                                    s->push( new Node(n, direction, n->steps + 1 ));
+                            }
+                        }
+		}
+		else
+		{
+			if( DEBUG ) printf("reverting move\n");
+			t->move( t->oppositeDirection(n->direction) ); // revert last move
+			delete n;
+		}
+
+	}
+}
+
+void idleState(Stack * s){
+     int tag = 1;
+    int flag;
+    MPI_Status status;
+    
+    // poslat work request
+    
+    int attempts = 0;
+    while(){
+           MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+            if (flag)
+            {
+                    //prisla zprava, je treba ji obslouzit
+                    //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
+                    //a pripadne cislo chyby (status.MPI_ERROR)
+                    switch (status.MPI_TAG)
+                    {
+                       case MSG_WORK_SENT : //  accept work and switch to workState
+                                            attemps = 0;
+                                               break;
+                       case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == numberOfProcessors-1 and myrank == 0 sent white token
+                                                attempts++;
+                                               break;
+                       case MSG_FINISH : // finish, switch to finish state
+                                               break;
+                       case MSG_TOKEN : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
+                                        break;
+                       default : printf("neznamy typ zpravy!\n"); break;
+                  }
+            }
+    }
+}
+
 int main( int argc, char** argv )
 {
 	/* MPI VARIABLES */
@@ -127,150 +309,39 @@ int main( int argc, char** argv )
 		t->unpack(message);
 
 		printf("proc #%d", my_rank);
-		t->print();
 		printf("\n");
 
 		// parse message
 		t = 0; // PARSE TRIANGLE
 		bestCount = 8;// PARSE NUMBER OF SHUFFLES;
 	}
-	usleep(microseconds);
+	/*usleep(microseconds);
 	MPI_Finalize();
-	return 0;
+	return 0;*/
 	Stack * s = new Stack;
 
-	// first nodes inserted to stack
-	for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
-	{
-		Direction direction = Direction(dir);
-		Node * initialNode = new Node(NULL, direction, 1);
-		s->push( initialNode );
-	}
-
-	int toInitialSend = my_rank == 0 ? numberOfProcessors-1 : 0;
+        
+        int toInitialSend = 0;
+        if( my_rank == 0 ){
+            toInitialSend = numberOfProcessors - 1;
+            // first nodes inserted to stack
+            for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
+            {
+                    Direction direction = Direction(dir);
+                    Node * initialNode = new Node(NULL, direction, 1);
+                    s->push( initialNode );
+            }
+        }
+	 
 	Direction * bestSolution = new Direction[bestCount];
 
 	Node * lastNode = new Node(NULL, RIGHT, 1);
 
-	int checkMsgCounter = 0;
+        workState(s, toInitialSend);
 
-	// ======== DEPTH-FIRST SEARCH ==========//
+	
 
-	while( s->getSize() > 0 )
-	{   
-                if ((checkMsgCounter % CHECK_MSG_AMOUNT)==0)
-                {
-                        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
-                        if (flag)
-                        {
-                                //prisla zprava, je treba ji obslouzit
-                                //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
-                                //a pripadne cislo chyby (status.MPI_ERROR)
-                                switch (status.MPI_TAG)
-                                {
-                                   case MSG_WORK_REQUEST : // zadost o praci, prijmout a dopovedet
-                                                           // zaslat rozdeleny zasobnik a nebo odmitnuti MSG_WORK_NOWORK
-                                                           break;
-                                   case MSG_WORK_SENT : // prisel rozdeleny zasobnik, prijmout
-                                                        // deserializovat a spustit vypocet
-                                                        break;
-                                   case MSG_WORK_NOWORK : // odmitnuti zadosti o praci
-                                                          // zkusit jiny proces
-                                                          // a nebo se prepnout do pasivniho stavu a cekat na token
-                                                          break;
-                                   case MSG_TOKEN : //ukoncovaci token, prijmout a nasledne preposlat
-                                                    // - bily nebo cerny v zavislosti na stavu procesu
-                                                    break;
-                                   case MSG_FINISH : //konec vypoctu - proces 0 pomoci tokenu zjistil, ze jiz nikdo nema praci
-                                                     //a rozeslal zpravu ukoncujici vypocet
-                                                     //mam-li reseni, odeslu procesu 0
-                                                     //nasledne ukoncim spoji cinnost
-                                                     //jestlize se meri cas, nezapomen zavolat koncovou barieru MPI_Barrier (MPI_COMM_WORLD)
-                                                     MPI_Finalize();
-                                                     exit (0);
-                                                     break;
-                                   default : printf("neznamy typ zpravy!\n"); break;
-                              }
-                        }
-                }
-		Node* n = s->pop();
-
-		if( DEBUG )
-		{
-			printf("\npopped: ");
-			t->printDirectionSymbol(n->direction);
-			printf("\n");
-		}
-
-		while( lastNode->prevNode != NULL && n->steps < lastNode->steps)
-		{
-			if( DEBUG ) printf("dead end, reverting parent\n");
-			t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
-
-			Node * lastNodePrevNode = lastNode->prevNode;
-			lastNode->direction = lastNodePrevNode->direction;   // lastNode = lastNodePrevNode
-			lastNode->steps = lastNodePrevNode->steps;
-			lastNode->prevNode = lastNodePrevNode->prevNode;
-			delete lastNodePrevNode;
-		}
-
-
-		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
-		{
-			if( DEBUG ) printf("opposite move, skipping\n");
-			delete n;
-			continue;
-		}
-
-		if( t->move(n->direction) == -1) // INVALID_MOVE
-		{
-			if( DEBUG ) printf("invalid move, skipping\n");
-			delete n;
-			continue;
-		}
-
-		lastNode->direction = n->direction;  // lastNode = lastNode->prevNode
-		lastNode->prevNode = n->prevNode;
-		lastNode->steps = n->steps;
-
-		if( DEBUG ) printf("steps: %d\n", n->steps);
-
-		if( t->isSorted() ) // this is a solution
-		{
-			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount);
-			if( n->steps <= bestCount )
-			{
-				bestCount = n->steps;
-				printf("New solution found with %d steps\n", bestCount);
-				copySolution( bestSolution, n);
-			}
-			t->move( t->oppositeDirection(n->direction) ); // revert last move
-			// todo revert parent
-			continue;
-		}
-
-		if( n->steps < bestCount )
-		{
-                        if( toInitialSend > 0 ){
-                            //SEND THIS NODE TO PROCESSOR P
-                            toInitialSend--;
-                        }else{
-                            if( DEBUG ) printf("inserting moves\n");
-                            for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
-                            {
-                                    Direction direction = Direction(dir);
-                                    s->push( new Node(n, direction, n->steps + 1 ));
-                            }
-                        }
-		}
-		else
-		{
-			if( DEBUG ) printf("reverting move\n");
-			t->move( t->oppositeDirection(n->direction) ); // revert last move
-			delete n;
-		}
-
-	}
+	
 
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
