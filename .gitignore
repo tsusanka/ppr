@@ -28,4 +28,5 @@
 *.app
 
 ppr/*
+CMakeLists.txt
 
