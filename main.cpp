@@ -54,6 +54,7 @@ int main( int argc, char** argv )
 	int bestCount;
 	Triangle * t;
 
+	printf("Starting, there are %d processors. \n", numberOfProcessors);
 	printf("Hello i am CPU #%d. \n", my_rank);
 
 	if( my_rank == 0 )
