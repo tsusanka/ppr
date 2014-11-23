@@ -81,6 +81,21 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message ){
         s->push(lastNode);
 }
 
+void sendWork(Stack * s, Triangle * t, int to, Node * lastNode )
+{
+  //SEND THIS NODE TO PROCESSOR P
+    char * buffer = new char[LENGTH];
+    int position = 0;
+    Direction * result = getPath(lastNode);
+    int ri = 0;
+    do
+    {
+            int a = (int) result[ri++];
+            MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+    }while( result[ri] != NONE);
+    MPI_Send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );   
+}
+
 int workState( Stack * s, int toInitialSend, Triangle * t, int myRank ) {
     int checkMsgCounter = 0;
     int tag = 1;
@@ -98,6 +113,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank ) {
         fillStackFromMessage( s, t, message);
     }
     
+    int sendWorkTo = -1;
     // ======== DEPTH-FIRST SEARCH ==========//
     
     while( s->getSize() > 0 )
@@ -113,6 +129,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank ) {
                                 switch (status.MPI_TAG)
                                 {
                                    case MSG_WORK_REQUEST : // send work
+                                                            sendWorkTo = status.MPI_SOURCE;
                                                            break;
                                    case MSG_TOKEN : // send black token
                                                     break;
@@ -179,18 +196,11 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank ) {
 		if( n->steps < bestCount )
 		{
                         if( toInitialSend > 0 ){
-                            //SEND THIS NODE TO PROCESSOR P
-                            char * buffer = new char[LENGTH];
-                            int position = 0;
-                            Direction * result = getPath(n);
-                            int ri = 0;
-                            do
-                            {
-                                    int a = (int) result[ri++];
-                                    MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
-                            }while( result[ri] != NONE);
-                            MPI_Send( (void*) buffer, position, MPI_PACKED, toInitialSend, MSG_WORK_SENT, MPI_COMM_WORLD );
+                            sendWork(s, t, toInitialSend, n);
                             toInitialSend--;
+                        }else if( sendWorkTo != -1){
+                            sendWork(s, t, sendWorkTo, n);
+                            sendWorkTo = -1;
                         }else{
                             if( DEBUG ) printf("inserting moves\n");
                             for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
@@ -215,13 +225,7 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor){
      int tag = 1;
     int flag;
     MPI_Status status;
-    
-    
     char message[LENGTH];
-		
-    
-    // poslat work request
-    
     
     int attempts = 0;
     int sent = 0;
@@ -246,12 +250,14 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor){
                        case MSG_WORK_SENT : //  accept work and switch to workState
                                             MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
                                             fillStackFromMessage(s, t, message);
-                                            attempts = 0;
                                             return WORK;
                        case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == numberOfProcessors-1 and myrank == 0 sent white token
                                                 attempts++;
                                                 if( attempts >= numberOfProcessor-1){
-                                                    //
+                                                    if (myRank == 0)
+                                                    {
+                                                        return TOKEN;
+                                                    }
                                                 }
                                                 sent = 0;
                                                break;
@@ -263,6 +269,13 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor){
                   }
             }
     }
+}
+
+// called only when myRank set to 0
+int tokenState(Stack * s, Triangle * t)
+{
+    // send token to next processor and wait for reply
+    //             MPI_Send( (void*) NULL, position, MPI_CHAR, dest , MSG_WORK_REQUEST, MPI_COMM_WORLD );
 }
 
 int main( int argc, char** argv )
@@ -388,13 +401,17 @@ int main( int argc, char** argv )
 	Node * lastNode = new Node(NULL, RIGHT, 1);
         int nextState = WORK;
         do{
-            if( nextState == WORK )
+            switch (nextState)
             {
-                nextState = workState(s, toInitialSend);
-            }
-            if( nextState == IDLE )
-            {
-                nextState = idleState( s, t, e ...);
+                case WORK:
+                    nextState = workState(s, toInitialSend, t, my_rank);
+                    break;
+                case IDLE:
+                    nextState = idleState(s, t, my_rank, numberOfProcessors);
+                    break;
+                case TOKEN:
+                    nextState = tokenState(s, t);
+                    break;
             }
         }while( nextState != FINISH )
 	
