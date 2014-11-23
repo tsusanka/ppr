@@ -96,7 +96,7 @@ int main( int argc, char** argv )
 		const char * message = t->convertToString().c_str();
 		for (int destination = 1; destination < numberOfProcessors; )
 		{
-			MPI_Send( message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );
+			MPI_Send( (void*) message, strlen(message)+1, MPI_CHAR, destination, tag, MPI_COMM_WORLD );
 			destination++;
 		}
 
