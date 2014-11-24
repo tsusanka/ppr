@@ -501,7 +501,7 @@ int main( int argc, char** argv )
 
 	/* MPI VARIABLES */
 	int tag = 9999;
-	int flag;
+
 	MPI_Status status;
 	int position = 0;
 
@@ -571,7 +571,6 @@ int main( int argc, char** argv )
 	}
 	else
 	{
-		MPI_Status status;
 		int flag = 0;
 		// WAIT FOR SHUFFLED TRIANGLE
 		while (!flag)
@@ -587,7 +586,7 @@ int main( int argc, char** argv )
 
         if (DEBUG_COMM)
         {
-            printf("X30: %d: triangle:", globals.myRank);
+            printf("X30: #%d: triangle:", globals.myRank);
             t->print();
             printf("\n");
         }
@@ -609,12 +608,13 @@ int main( int argc, char** argv )
     }
     else // sends first ever work
     {
+        int flag = 0;
         char message[LENGTH]; // TODO dynamic?
-        while (true)
+        while (!flag)
         {
             MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
-            if( flag ) break;
         }
+        printf("X37: #%d: I'm waiting for work receive.", globals.myRank);
         receive( message, LENGTH, MPI_PACKED, 0, flag, MPI_COMM_WORLD, &status );
         fillStackFromMessage(s, t, message);
     }
@@ -656,6 +656,7 @@ int main( int argc, char** argv )
         int size = 0;
         for (int source=1; source < globals.numberOfProcessors;)
         {
+            int flag = 0;
             /* checking if message has arrived */
             MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
             if (flag) {
