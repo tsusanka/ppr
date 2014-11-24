@@ -10,16 +10,21 @@
 #define DEBUG false
 #define CHECK_MSG_AMOUNT  100
 #define LENGTH 1000
+#define SHORT_BUFFER_LENGTH 10
+
 
 #define MSG_WORK_REQUEST 1000
 #define MSG_WORK_SENT    1001
 #define MSG_WORK_NOWORK  1002
-#define MSG_TOKEN        1003
-#define MSG_FINISH       1004
+#define MSG_TOKEN_BLACK  1003
+#define MSG_TOKEN_WHITE  1004
+#define MSG_FINISH       1005
+#define MSG_NEW_BEST_SOLUTION 1006
 
 #define WORK       8004
 #define IDLE       8005
 #define FINISH       8006
+
 #define TOKEN       8007
 
 void copySolution( Direction * where, Node * from )
@@ -99,10 +104,41 @@ void sendWork(int to, Node * lastNode )
     MPI_Send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
 }
 
+void broadcastBestCount(int count, int myRank, int numberOfProcessors) {
+    char * buffer = new char[SHORT_BUFFER_LENGTH];
+    int position = 0;
+    MPI_Pack(&count, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+    for (int i = 0; i <  numberOfProcessors; ++i) {
+        MPI_Send (buffer, position, MPI_PACKED, i, MSG_NEW_BEST_SOLUTION, MPI_COMM_WORLD);
+    }
+}
+
+int recieveBestCount( char * message ){
+    int position = 0;
+    int recievedCount = 0;
+    MPI_Unpack(message, LENGTH, &position, &recievedCount, 1, MPI_INT, MPI_COMM_WORLD);
+    return recievedCount;
+}
+
+void sendBlackToken(int myRank, int numberOfProcessors) {
+    int position = 0;
+    MPI_Send (NULL, position, MPI_CHAR, myRank + 1 % numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
+}
+
+void sendWhiteToken(int myRank, int numberOfProcessors) {
+    int position = 0;
+    MPI_Send (NULL, position, MPI_CHAR, myRank + 1 % numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+}
+
+void sendFinish(int myRank, int numberOfProcessors) {
+    int position = 0;
+    MPI_Send (NULL, position, MPI_CHAR, myRank + 1 % numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+}
+
 /**
  * Deals with all the work
  */
-int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestCount )
+int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestCount, int numberOfProcessors)
 {
     int checkMsgCounter = 0;
     int flag;
@@ -125,7 +161,17 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
                     case MSG_WORK_REQUEST :
                         sendWorkTo = status.MPI_SOURCE;
                         break;
-                    case MSG_TOKEN : // TODO send black token
+                    case MSG_TOKEN_BLACK :
+                    case MSG_TOKEN_WHITE:
+                        sendBlackToken( myRank, numberOfProcessors);
+                        break;
+                    case MSG_NEW_BEST_SOLUTION:
+                        char * buffer = new char[SHORT_BUFFER_LENGTH];
+                        MPI_Recv(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                        int newCount = recieveBestCount(buffer);
+                        if(newCount < bestCount){
+                            bestCount = newCount;
+                        }
                         break;
                     default : printf("neznamy typ zpravy!\n"); break;
               }
@@ -176,11 +222,12 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
 		if( t->isSorted() ) // this is a solution
 		{
 			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount); // TODO: send bestCount to other processors
-			if( n->steps <= bestCount )
+			if( n->steps < bestCount )
 			{
 				bestCount = n->steps;
 				printf("New solution found with %d steps\n", bestCount);
 				copySolution( bestSolution, n);
+                broadcastBestCount(bestCount,myRank,numberOfProcessors);
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert parent
@@ -266,7 +313,11 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
                     break;
                 case MSG_FINISH : // finish, switch to finish state
                     return FINISH;
-                case MSG_TOKEN : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
+                case MSG_TOKEN_BLACK : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
+                    sendBlackToken(myRank, numberOfProcessor);
+                    break;
+                case MSG_TOKEN_WHITE:
+                    sendWhiteToken(myRank, numberOfProcessor);
                     break;
                 default : printf("neznamy typ zpravy!\n"); break;
             }
@@ -275,10 +326,27 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
 }
 
 // called only when myRank set to 0
-int tokenState(Stack * s, Triangle * t)
+int tokenState(Stack * s, Triangle * t, int numberOfProcessors)
 {
     // send token to next processor and wait for reply
     //             MPI_Send( (void*) NULL, position, MPI_CHAR, dest , MSG_WORK_REQUEST, MPI_COMM_WORLD );
+    sendWhiteToken(0, numberOfProcessors);
+    while(true)
+    {
+        MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+        if (flag)
+        {
+            switch (status.MPI_TAG)
+            {
+                case MSG_TOKEN_BLACK : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
+                    return IDLE;
+                case MSG_TOKEN_WHITE:
+                    return FINISH;
+                default : printf("neznamy typ zpravy!\n"); break;
+            }
+        }
+    }
+
 }
 
 int main( int argc, char** argv )
@@ -414,7 +482,7 @@ int main( int argc, char** argv )
         switch (nextState)
         {
             case WORK:
-                nextState = workState(s, toInitialSend, t, myRank, bestCount);
+                nextState = workState(s, toInitialSend, t, myRank, bestCount, numberOfProcessors);
                 break;
             case IDLE:
                 nextState = idleState(s, t, myRank, numberOfProcessors);
@@ -426,6 +494,10 @@ int main( int argc, char** argv )
     }
     while( nextState != FINISH );
 
+    if( myRank == 0 )
+    {
+//        sendFinish();
+    }
 
     // TODO gather all results
     // MPI_Finalize
