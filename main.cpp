@@ -449,7 +449,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert parent
-			continu;
+			continue;
 		}
 
 		if( n->steps < globals.bestCount )
