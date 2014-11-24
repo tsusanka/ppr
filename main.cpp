@@ -431,7 +431,7 @@ int idleState(Stack * s, Triangle * t)
             {
                 dest = rand() % globals.numberOfProcessors; // generating destination randomly except to yourself
             }
-            while( dest != globals.myRank);
+            while( dest == globals.myRank);
             send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
             sent = 1;
         }
