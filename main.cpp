@@ -124,8 +124,11 @@ void printDirectionSymbol(Direction dir)
         case TOP_RIGHT:
             printf("/|");
             break;
+        case NONE:
+            printf("NONE");
+            break;
         default:
-            printf("invalid direction");
+            printf("invalid direction:%d",dir);
             throw -2;
     }
 }
@@ -178,6 +181,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         direction = (Direction) number;
         printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
         printDirectionSymbol(direction);
+        printf("\n");
         if( direction == NONE )
         {
             break;
@@ -185,7 +189,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         int result = t->move ( direction );
         if( result == -1 )
         {
-            printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d", globals.myRank, number);
+            printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
