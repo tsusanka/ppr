@@ -762,7 +762,7 @@ int main( int argc, char** argv )
                     receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
                     if (message != NULL) {
                         tempBestSolution = unpackBestSolution(message, &size);
-                        if (size < bestSize) {
+                        if (size <= bestSize) {
                             delete bestSolution;
                             bestSize = size;
                             bestSolution = tempBestSolution;
