@@ -308,6 +308,9 @@ Direction * unpackBestSolution(char * message, int* size)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
+        printf("X41: #%d: unpackBestSolution> DIRECTION recieved:", globals.myRank);
+        printDirectionSymbol(direction);
+        printf("\n");
         if( direction == -1 )
         {
             break;
@@ -762,6 +765,7 @@ int main( int argc, char** argv )
                     receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
                     if (message != NULL) {
                         tempBestSolution = unpackBestSolution(message, &size);
+                        if (DEBUG_STACK) printf("X43: #%d: solution received with %d size\n", globals.myRank, size);
                         if (size <= bestSize) {
                             delete bestSolution;
                             bestSize = size;
