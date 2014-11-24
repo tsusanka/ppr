@@ -92,10 +92,10 @@ void sendWork(int to, Node * lastNode )
     int ri = 0;
     do
     {
-        int a = (int) result[ri++];
+        int a = (int) result[ri];
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     }
-    while( result[ri] != NONE);
+    while( result[ri++] != NONE);
     MPI_Send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
 }
 
