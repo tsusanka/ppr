@@ -63,7 +63,7 @@ void printMSGFlag(int flag)
             printf("MSG_FINISH_SOLUTION");
             break;
         default:
-            printf("aaay caramba, i don't know flag %d\n", flag);
+            printf("66 aaay caramba, i don't know flag %d\n", flag);
             break;
     }
 }
@@ -284,7 +284,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
                 if (DEBUG_COMM)
                 {
                     printf("#%d: I've received a message with tag ", globals.myRank);
-                    printMSGFlag;
+                    printMSGFlag(status.MPI_TAG);
                     printf("\n");
                 }
                 switch (status.MPI_TAG)
@@ -310,7 +310,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
                         }
                         break;
                     default:
-                        printf("#%d: neznamy typ zpravy!\n", globals.myRank);
+                        printf("#%d: L313 neznamy typ zpravy!\n", globals.myRank);
                         break;
               }
             }
@@ -460,7 +460,7 @@ int idleState(Stack * s, Triangle * t)
                 case MSG_TOKEN_WHITE:
                     sendWhiteToken();
                     break;
-                default : printf("neznamy typ zpravy!\n"); break;
+                default : printf("L463 neznamy typ zpravy!\n"); break;
             }
         }
     }
@@ -483,7 +483,7 @@ int tokenState(Stack * s, Triangle * t)
                     return IDLE;
                 case MSG_TOKEN_WHITE:
                     return FINISH;
-                default : printf("#%d: neznamy typ zpravy!\n", globals.myRank); break;
+                default : printf("#%d: L486 neznamy typ zpravy!\n", globals.myRank); break;
             }
         }
     }
