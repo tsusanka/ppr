@@ -187,6 +187,9 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
             break;
         }
         int result = t->move ( direction );
+        printf("X43: #%d: fillStackFromMessage> moving :%d\n", globals.myRank, number);
+        printDirectionSymbol(direction);
+        printf("\n");
         if( result == -1 )
         {
             printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
@@ -196,6 +199,9 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     }
     if (DEBUG_COMM) printf("X6: #%d: I've filled my stack. \n", globals.myRank);
     t->move( t->oppositeDirection(lastNode->direction) ); //revert the last move, because it will be done after it is popped from the stack
+    printf("X42: #%d: fillStackFromMessage> revert move", globals.myRank);
+    printDirectionSymbol(lastNode->direction);
+    printf("\n");
     s->push(lastNode);
 }
 
@@ -452,6 +458,8 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
             }
             else
             {
+                printf("X44: #%d:", globals.myRank);
+                t->print();
                 if( DEBUG_STACK) printf("X23: #%d: inserting moves\n", globals.myRank);
                 for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
                 {
