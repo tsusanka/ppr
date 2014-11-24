@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <tclDecls.h>
 #include "mpi.h"
 #include "main.h"
 
@@ -506,23 +507,32 @@ int idleState(Stack * s, Triangle * t)
 }
 
 // called only when myRank set to 0
-int tokenState(Stack * s, Triangle * t)
+int tokenState()
 {
     int flag;
     MPI_Status status;
     sendWhiteToken();
+    char * buffer = new char[SHORT_BUFFER_LENGTH];
     while(true)
     {
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (flag)
         {
+            receive( buffer, SHORT_BUFFER_LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
             switch (status.MPI_TAG)
             {
                 case MSG_TOKEN_BLACK : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
                     return IDLE;
                 case MSG_TOKEN_WHITE:
                     return FINISH;
-                default : printf("X26: #%d: L486 neznamy typ zpravy!\n", globals.myRank); break;
+                case MSG_WORK_REQUEST:
+                    sendNoWork(status.MPI_SOURCE);
+                    break;
+                case MSG_WORK_NOWORK:
+                    break;
+                default :
+                    printf("X26: #%d: unknown tag %d.\n", globals.myRank, status.MPI_TAG);
+                    break;
             }
         }
     }
