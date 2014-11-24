@@ -195,12 +195,12 @@ void broadcastBestCount(int count) {
 
 void sendBlackToken() {
     int position = 0;
-    send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % (globals.numberOfProcessors - 1), MSG_TOKEN_BLACK, MPI_COMM_WORLD);
 }
 
 void sendWhiteToken() {
     int position = 0;
-    send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % (globals.numberOfProcessors - 1), MSG_TOKEN_WHITE, MPI_COMM_WORLD);
 }
 
 void sendNoWork(int to)
