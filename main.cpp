@@ -244,12 +244,12 @@ void broadcastBestCount(int count) {
 
 void sendBlackToken() {
     int position = 0;
-    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % (globals.numberOfProcessors - 1), MSG_TOKEN_BLACK, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % globals.numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
 }
 
 void sendWhiteToken() {
     int position = 0;
-    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % (globals.numberOfProcessors - 1), MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, (globals.myRank + 1) % globals.numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
 }
 
 void sendNoWork(int to)
@@ -332,9 +332,9 @@ void receiveBestSolution(char * buffer)
     if (DEBUG_COMM) printf("X11: #%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
     if (newCount < globals.bestCount)
     {
+        if (DEBUG_COMM) printf("X12: #%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, globals.bestCount);
         globals.bestCount = newCount;
         globals.solutionFound = 0;
-        if (DEBUG_COMM) printf("X12: #%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, globals.bestCount);
     }
 }
 
@@ -455,12 +455,14 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
                 if (DEBUG_COMM) printf("X21: #%d: I am sending INITIAL send work to #%d \n", globals.myRank, toInitialSend);
                 sendWork(toInitialSend, n);
                 toInitialSend--;
+                t->move( t->oppositeDirection(n->direction) ); // revert last move
             }
             else if( sendWorkTo != -1)
             {
                 if (DEBUG_COMM) printf("X22: #%d: I am sending usual work to #%d \n", globals.myRank, sendWorkTo);
                 sendWork(sendWorkTo, n);
                 sendWorkTo = -1;
+                t->move( t->oppositeDirection(n->direction) ); // revert last move
             }
             else
             {
