@@ -116,7 +116,8 @@ void broadcastBestCount(int count, int myRank, int numberOfProcessors) {
     }
 }
 
-int recieveBestCount( char * message ){
+int recieveBestCount( char * message )
+{
     int position = 0;
     int recievedCount = 0;
     MPI_Unpack(message, LENGTH, &position, &recievedCount, 1, MPI_INT, MPI_COMM_WORLD);
@@ -189,6 +190,8 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int * bes
     int flag;
     MPI_Status status;
     int sendWorkTo = -1;
+    int newCount = 0;
+    char * buffer;
 
     // ======== DEPTH-FIRST SEARCH ==========//
 
@@ -210,9 +213,10 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int * bes
                         sendBlackToken( myRank, numberOfProcessors);
                         break;
                     case MSG_NEW_BEST_SOLUTION:
-                        char * buffer = new char[SHORT_BUFFER_LENGTH];
+                        buffer = new char[SHORT_BUFFER_LENGTH];
                         MPI_Recv(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                        int newCount = recieveBestCount(buffer);
+                        newCount = recieveBestCount(buffer);
+                        delete buffer;
                         if(newCount < *bestCount){
                             *bestCount = newCount;
                             *solutionFound = 0;
