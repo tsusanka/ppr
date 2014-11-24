@@ -437,13 +437,16 @@ int idleState(Stack * s, Triangle * t)
         if( !sent )
         {
             int dest;
+            printf("AA");
             do
             {
                 dest = rand() % globals.numberOfProcessors; // generating destination randomly except to yourself
             }
             while( dest == globals.myRank);
+            printf("BB");
             send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
             sent = 1;
+            printf("CC");
         }
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (flag)
