@@ -243,7 +243,7 @@ void sendMyBestSolution(Direction * bestSolution)
 
 void sendNoSolutionFound() {
     int position = 0;
-    if (DEBUG_STACK) printf("X9: #%d: I'm sending NOOOOOO solution to #0. \n", globals.myRank);
+    if (DEBUG_STACK) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
     send(  NULL, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
 
@@ -704,12 +704,19 @@ int main( int argc, char** argv )
             if (flag) {
                 /* receiving message by blocking receive */
                 receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
-                if(message != NULL) {
+                if(message != NULL)
+                {
                     tempBestSolution = unpackBestSolution(message, &size);
-                    if (bestSize < size) {
+                    if (size < bestSize)
+                    {
+                        delete bestSolution;
                         bestSize = size;
                         bestSolution = tempBestSolution;
                         if( DEBUG_STACK) printf("X35: #%d: Found better solution \n", globals.myRank);
+                    }
+                    else
+                    {
+                        delete [] tempBestSolution;
                     }
                 }
                 source++;
