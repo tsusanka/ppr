@@ -175,6 +175,8 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     Direction direction;
     Node * lastNode = NULL;
     int i = 1;
+    printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
+    t->print();
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
@@ -641,10 +643,13 @@ int main( int argc, char** argv )
 		printf("X28: #0: Default triangle:\n");
 		t->print();
 
-		for( int i = 0; i < q; i++ )
-		{
-			t->randomStep();
-		}
+//        for( int i = 0; i < q; i++ )
+//		{
+//			t->randomStep();
+//		}
+        t->move(BOTTOM_RIGHT);
+        t->move(BOTTOM_RIGHT);
+        t->move(LEFT);
 
 		printf("X29: #0: Triangle after shuffle:\n");
 		t->print();
