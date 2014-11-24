@@ -723,8 +723,6 @@ int main( int argc, char** argv )
         sendNoSolutionFound();
     }
 
-    // MPI_Finalize
-
 	printf("==============================\n");
 	printf("X36: End: best solution found with %d steps. Moves:\n", globals.bestCount);
 	for( int i = globals.bestCount - 1; i >= 0; i-- )
@@ -736,6 +734,8 @@ int main( int argc, char** argv )
 
 	delete s;
 	delete t;
+
+    MPI_Finalize();
 
 	return 0;
 }
