@@ -30,6 +30,8 @@
 
 struct Globals
 {
+    int bestCount;
+    int solutionFound;
     int myRank;
     int numberOfProcessors;
     char * nullBuffer;
@@ -191,14 +193,6 @@ void broadcastBestCount(int count) {
     }
 }
 
-int recieveBestCount( char * message )
-{
-    int position = 0;
-    int recievedCount = 0;
-    MPI_Unpack(message, LENGTH, &position, &recievedCount, 1, MPI_INT, MPI_COMM_WORLD);
-    return recievedCount;
-}
-
 void sendBlackToken() {
     int position = 0;
     send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
@@ -225,11 +219,11 @@ void sendFinish()
 /**
  * sends processor's best solution to myRank 0
  */
-void sendMyBestSolution(Direction * bestSolution, int bestCount)
+void sendMyBestSolution(Direction * bestSolution)
 {
     char * buffer = new char[LENGTH];
     int position = 0;
-    for(int i = 0; i < bestCount; i++)
+    for(int i = 0; i < globals.bestCount; i++)
     {
         int a = (int) bestSolution[i];
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
@@ -269,10 +263,34 @@ Direction * unpackBestSolution(char * message, int* size)
     return result;
 }
 
+int recieveBestCount( char * message )
+{
+    int position = 0;
+    int recievedCount = 0;
+    MPI_Unpack(message, LENGTH, &position, &recievedCount, 1, MPI_INT, MPI_COMM_WORLD);
+    return recievedCount;
+}
+
+void receiveBestSolution()
+{
+    char * buffer = new char[SHORT_BUFFER_LENGTH];
+    MPI_Status status;
+    receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+    int newCount = recieveBestCount(buffer);
+    if (DEBUG_COMM) printf("X11: #%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
+    delete buffer;
+    if (newCount < globals.bestCount)
+    {
+        globals.bestCount = newCount;
+        globals.solutionFound = 0;
+        if (DEBUG_COMM) printf("X12: #%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, globals.bestCount);
+    }
+}
+
 /**
  * Deals with all the work
  */
-int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Direction * bestSolution, int * solutionFound)
+int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolution)
 {
     int checkMsgCounter = 0;
     int flag;
@@ -307,20 +325,10 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
                         sendBlackToken();
                         break;
                     case MSG_NEW_BEST_SOLUTION:
-                        buffer = new char[SHORT_BUFFER_LENGTH];
-                        receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-                        newCount = recieveBestCount(buffer);
-                        if (DEBUG_COMM) printf("X11: #%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
-                        delete buffer;
-                        if (newCount < *bestCount)
-                        {
-                            *bestCount = newCount;
-                            *solutionFound = 0;
-                            if (DEBUG_COMM) printf("X12: #%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, *bestCount);
-                        }
+                        receiveBestSolution( );
                         break;
                     default:
-                        printf("X13: #%d: neznamy typ zpravy!\n", globals.myRank);
+                        printf("X13: #%d: neznamy typ zpravy! tag %d\n", globals.myRank, status.MPI_TAG);
                         break;
               }
             }
@@ -369,21 +377,21 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("X19: #%d: Sorted! Steps: %d; bestCount: %d\n", globals.myRank, n->steps, *bestCount); // TODO: send bestCount to other processors
-			if( n->steps < *bestCount )
+			printf("X19: #%d: Sorted! Steps: %d; globals.bestCount: %d\n", globals.myRank, n->steps, globals.bestCount); // TODO: send bestCount to other processors
+			if( n->steps < globals.bestCount )
 			{
-				*bestCount = n->steps;
-				printf("X20: #%d: New solution found with %d steps\n", globals.myRank, *bestCount);
+				globals.bestCount = n->steps;
+				printf("X20: #%d: New solution found with %d steps\n", globals.myRank, globals.bestCount);
 				copySolution( bestSolution, n);
-                broadcastBestCount(*bestCount);
-                *solutionFound = 1;
+                broadcastBestCount(globals.bestCount);
+                globals.solutionFound = 1;
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert parent
 			continue;
 		}
 
-		if( n->steps < *bestCount )
+		if( n->steps < globals.bestCount )
 		{
             if( toInitialSend > 0 )
             {
@@ -470,6 +478,9 @@ int idleState(Stack * s, Triangle * t)
                 case MSG_TOKEN_WHITE:
                     sendWhiteToken();
                     break;
+                case MSG_NEW_BEST_SOLUTION:
+                    receiveBestSolution();
+                    break;
                 default : printf("X25: #%d: neznamy typ zpravy, tag %d!\n", globals.myRank, status.MPI_TAG); break;
             }
         }
@@ -520,7 +531,6 @@ int main( int argc, char** argv )
 	MPI_Comm_size(MPI_COMM_WORLD, &(globals.numberOfProcessors));
 
 	/* Sequential Variables */
-	int bestCount;
 	Triangle * t;
 	unsigned int microseconds = 100000;
 
@@ -545,7 +555,7 @@ int main( int argc, char** argv )
 	}
 	assert(q > 0);
 
-    bestCount = q;
+    globals.bestCount = q;
 
 	printf("Hello i am CPU #%d. q is %d, n is %d \n", globals.myRank, q, n);
 
@@ -625,16 +635,15 @@ int main( int argc, char** argv )
         fillStackFromMessage(s, t, message);
     }
 
-    Direction * bestSolution = new Direction[bestCount];
+    Direction * bestSolution = new Direction[globals.bestCount];
     int nextState = WORK;
-    int solutionFound = 0;
     do
     {
         switch (nextState)
         {
             case WORK:
                 if (DEBUG_COMM) printf("X31: #%d: I am changing my state to WORK. \n", globals.myRank);
-                nextState = workState(s, toInitialSend, t, &bestCount, bestSolution, &solutionFound);
+                nextState = workState(s, toInitialSend, t, bestSolution);
                 break;
             case IDLE:
                 if (DEBUG_COMM) printf("X32: #%d: I am changing my state to IDLE. \n", globals.myRank);
@@ -654,9 +663,9 @@ int main( int argc, char** argv )
         sendFinish();
         int bestSize = 0;
         Direction * tempBestSolution;
-        if (solutionFound)
+        if (globals.solutionFound)
         {
-            bestSize = bestCount;
+            bestSize = globals.bestCount;
         }
         char message[LENGTH];
         int size = 0;
@@ -680,9 +689,9 @@ int main( int argc, char** argv )
             }
         }
     }
-    else if( solutionFound )
+    else if( globals.solutionFound )
     {
-        sendMyBestSolution(bestSolution, bestCount);
+        sendMyBestSolution(bestSolution);
     }else{
         sendNoSolutionFound();
     }
@@ -690,8 +699,8 @@ int main( int argc, char** argv )
     // MPI_Finalize
 
 	printf("==============================\n");
-	printf("X36: End: best solution found with %d steps. Moves:\n", bestCount);
-	for( int i = bestCount - 1; i >= 0; i-- )
+	printf("X36: End: best solution found with %d steps. Moves:\n", globals.bestCount);
+	for( int i = globals.bestCount - 1; i >= 0; i-- )
 	{
 		t->printDirectionSymbol(bestSolution[i]);
 	}
