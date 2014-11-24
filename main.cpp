@@ -74,7 +74,7 @@ void printMSGFlag(int flag)
             printf("MSG_SHUFFLED_TRIANGLE");
             break;
         default:
-            printf("X1: #%d: aaay caramba, i don't know flag %d\n", globals.myRank, flag);
+            printf("X01: #%d: aaay caramba, i don't know flag %d\n", globals.myRank, flag);
             break;
     }
 }
@@ -83,7 +83,7 @@ int send(const void *buffer, int count, MPI_Datatype datatype, int dest, int tag
 {
     if (DEBUG_COMM)
     {
-        printf("X2: #%d: I am sending message to #%d with tag ", globals.myRank, dest);
+        printf("X02: #%d: I am sending message to #%d with tag ", globals.myRank, dest);
         printMSGFlag(tag);
         printf("\n");
     }
@@ -99,7 +99,7 @@ int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MP
     int result = MPI_Recv(buf, count, datatype, source, tag, comm, status);
     if (DEBUG_COMM)
     {
-        printf("X3: #%d: I am receiving message with tag ", globals.myRank);
+        printf("X03: #%d: I am receiving message with tag ", globals.myRank);
         printMSGFlag( status->MPI_TAG );
         printf(" from #%d\n", status->MPI_SOURCE);
     }
@@ -143,7 +143,7 @@ void copySolution( Direction * where, Node * from )
 	int i = 0;
 	if (node == NULL)
 	{
-		printf("X4: Something is wrong; no solution found.\n");
+		printf("X04: Something is wrong; no solution found.\n");
 		return;
 	}
 	printf("X40: I am gonna print the solution just for you.\n");
@@ -197,7 +197,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         printf("\n");
         if( result == -1 )
         {
-            printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
+            printf("X05: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
@@ -262,7 +262,7 @@ void sendNoWork(int to)
  */
 void sendFinish()
 {
-    if (DEBUG_COMM) printf("X7: #%d: sending FINAL to all processors \n", globals.myRank);
+    if (DEBUG_COMM) printf("X07: #%d: sending FINAL to all processors \n", globals.myRank);
     int position = 0;
     for (int i = 1; i < globals.numberOfProcessors; ++i) // intentionally from 1 because of myRank = 0
     {
@@ -283,7 +283,7 @@ void sendMyBestSolution(Direction * bestSolution)
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     }
     int a = -1;
-    if (DEBUG_COMM) printf("X8: #%d: I'm sending my best solution to #0. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X08: #%d: I'm sending my best solution to #0. \n", globals.myRank);
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
 }
@@ -291,7 +291,7 @@ void sendMyBestSolution(Direction * bestSolution)
 
 void sendNoSolutionFound() {
     int position = 0;
-    if (DEBUG_COMM) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X09: #%d: I'm sending no solution to #0. \n", globals.myRank);
     send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD );
 }
 
