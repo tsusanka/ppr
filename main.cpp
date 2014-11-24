@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <tclDecls.h>
 #include "mpi.h"
 #include "main.h"
 
@@ -679,7 +678,7 @@ int main( int argc, char** argv )
                 break;
             case TOKEN:
                 if (DEBUG_COMM) printf("X33: #%d: I am changing my state to TOKEN. \n", globals.myRank);
-                nextState = tokenState(s, t);
+                nextState = tokenState();
                 break;
         }
     }
