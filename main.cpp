@@ -364,11 +364,11 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("X19: Sorted! Steps: %d; bestCount: %d\n", n->steps, *bestCount); // TODO: send bestCount to other processors
+			printf("X19: #%d: Sorted! Steps: %d; bestCount: %d\n", globals.myRank, n->steps, *bestCount); // TODO: send bestCount to other processors
 			if( n->steps < *bestCount )
 			{
 				*bestCount = n->steps;
-				printf("X20: New solution found with %d steps\n", *bestCount);
+				printf("X20: #%d: New solution found with %d steps\n", globals.myRank, *bestCount);
 				copySolution( bestSolution, n);
                 broadcastBestCount(*bestCount);
                 *solutionFound = 1;
@@ -576,13 +576,13 @@ int main( int argc, char** argv )
 		// WAIT FOR SHUFFLED TRIANGLE
 		while (!flag)
 		{
-			MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status); // busy waiting(?)
+			MPI_Iprobe(0, MSG_SHUFFLED_TRIANGLE, MPI_COMM_WORLD, &flag, &status); // busy waiting(?)
 		}
 
 		t = new Triangle(n);
 
 		char message[LENGTH]; // todo: dynamic length?
-		receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		receive( message, LENGTH, MPI_PACKED, 0, MSG_SHUFFLED_TRIANGLE, MPI_COMM_WORLD, &status );
 		t->unpack(message);
 
         if (DEBUG_COMM)
@@ -615,7 +615,7 @@ int main( int argc, char** argv )
             MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
             if( flag ) break;
         }
-        receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, flag, MPI_COMM_WORLD, &status );
+        receive( message, LENGTH, MPI_PACKED, 0, flag, MPI_COMM_WORLD, &status );
         fillStackFromMessage(s, t, message);
     }
 
