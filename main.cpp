@@ -624,7 +624,7 @@ int main( int argc, char** argv )
             MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
         }
         printf("X37: #%d: Probe request flag true, recieving 2.", globals.myRank);
-        receive( message, LENGTH, MPI_PACKED, 0, flag, MPI_COMM_WORLD, &status );
+        receive( message, LENGTH, MPI_PACKED, 0, MSG_WORK_SENT, MPI_COMM_WORLD, &status );
         fillStackFromMessage(s, t, message);
     }
 
