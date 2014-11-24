@@ -719,8 +719,12 @@ int main( int argc, char** argv )
     else if( globals.solutionFound )
     {
         sendMyBestSolution(bestSolution);
+        MPI_Finalize();
+        return 0;
     }else{
         sendNoSolutionFound();
+        MPI_Finalize();
+        return 0;
     }
 
 	printf("==============================\n");
