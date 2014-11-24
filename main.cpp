@@ -63,7 +63,7 @@ void printMSGFlag(int flag)
             printf("MSG_FINISH_SOLUTION");
             break;
         default:
-            printf("66 aaay caramba, i don't know flag %d\n", flag);
+            printf("#%d: L66 aaay caramba, i don't know flag %d\n", flag, globals.myRank);
             break;
     }
 }
@@ -460,7 +460,7 @@ int idleState(Stack * s, Triangle * t)
                 case MSG_TOKEN_WHITE:
                     sendWhiteToken();
                     break;
-                default : printf("L463 neznamy typ zpravy!\n"); break;
+                default : printf("#%d: L463 neznamy typ zpravy!\n", globals.myRank); break;
             }
         }
     }
