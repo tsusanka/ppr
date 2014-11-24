@@ -32,6 +32,7 @@ struct Globals
 {
     int myRank;
     int numberOfProcessors;
+    char * nullBuffer;
 };
 
 Globals globals;
@@ -72,7 +73,7 @@ void printMSGFlag(int flag)
     }
 }
 
-int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+int send(const void *buffer, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
 {
     if (DEBUG_COMM)
     {
@@ -80,7 +81,11 @@ int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int 
         printMSGFlag(tag);
         printf("\n");
     }
-    return MPI_Send( (void*) buffer, position, datatype, dest, tag, comm );
+    if( buffer == NULL ){
+        buffer = globals.nullBuffer;
+        count = 1;
+    }
+    return MPI_Send( (void*) buffer, count, datatype, dest, tag, comm );
 }
 
 int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
@@ -501,7 +506,7 @@ int main( int argc, char** argv )
 
 	/* MPI VARIABLES */
 	int tag = 9999;
-
+    globals.nullBuffer = new char[1];
 	MPI_Status status;
 	int position = 0;
 
