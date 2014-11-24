@@ -63,7 +63,7 @@ void printMSGFlag(int flag)
             printf("MSG_FINISH_SOLUTION");
             break;
         default:
-            printf("#%d: L66 aaay caramba, i don't know flag %d\n", flag, globals.myRank);
+            printf("X1: #%d: aaay caramba, i don't know flag %d\n", globals.myRank, flag);
             break;
     }
 }
@@ -72,7 +72,7 @@ int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int 
 {
     if (DEBUG_COMM)
     {
-        printf("#%d: I am sending message to #%d with tag ", globals.myRank, dest);
+        printf("X2: #%d: I am sending message to #%d with tag ", globals.myRank, dest);
         printMSGFlag(tag);
         printf("\n");
     }
@@ -83,7 +83,7 @@ int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MP
 {
     if (DEBUG_COMM)
     {
-        printf("#%d: I am receiving message from #%d with tag ", globals.myRank, source);
+        printf("X3: #%d: I am receiving message from #%d with tag ", globals.myRank, source);
         printMSGFlag(tag);
         printf("\n");
     }
@@ -96,7 +96,7 @@ void copySolution( Direction * where, Node * from )
 	int i = 0;
 	if (node == NULL)
 	{
-		printf("Something is wrong; no solution found.\n"); // remove after fix
+		printf("X4: Something is wrong; no solution found.\n"); // remove after fix
 		return;
 	}
 
@@ -140,12 +140,12 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         int result = t->move ( direction );
         if( result == -1 )
         {
-            printf("fillStackFromMessage>Invalid MOVE recieved:%d",number);
+            printf("X5: fillStackFromMessage>Invalid MOVE recieved:%d",number);
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
     }
-    if (DEBUG_COMM) printf("#%d: I've filled my stack. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X6: #%d: I've filled my stack. \n", globals.myRank);
     t->move( t->oppositeDirection(lastNode->direction) ); //revert the last move, because it will be done after it is popped from the stack
     s->push(lastNode);
 }
@@ -204,7 +204,7 @@ void sendWhiteToken() {
  */
 void sendFinish()
 {
-    if (DEBUG_STACK) printf("#%d: sending FINAL to all processors \n", globals.myRank);
+    if (DEBUG_STACK) printf("X7: #%d: sending FINAL to all processors \n", globals.myRank);
     int position = 0;
     for (int i = 1; i < globals.numberOfProcessors; ++i) // intentionally from 1 because of myRank = 0
     {
@@ -225,7 +225,7 @@ void sendMyBestSolution(Direction * bestSolution, int bestCount)
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     }
     int a = -1;
-    if (DEBUG_STACK) printf("#%d: I'm sending my best solution to #0. \n", globals.myRank);
+    if (DEBUG_STACK) printf("X8: #%d: I'm sending my best solution to #0. \n", globals.myRank);
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
@@ -233,7 +233,7 @@ void sendMyBestSolution(Direction * bestSolution, int bestCount)
 
 void sendNoSolutionFound() {
     int position = 0;
-    if (DEBUG_STACK) printf("#%d: I'm sending NOOOOOO solution to #0. \n", globals.myRank);
+    if (DEBUG_STACK) printf("X9: #%d: I'm sending NOOOOOO solution to #0. \n", globals.myRank);
     send(  NULL, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
 
@@ -283,7 +283,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
             {
                 if (DEBUG_COMM)
                 {
-                    printf("#%d: I've received a message with tag ", globals.myRank);
+                    printf("X10: #%d: I've received a message with tag ", globals.myRank);
                     printMSGFlag(status.MPI_TAG);
                     printf("\n");
                 }
@@ -300,17 +300,17 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
                         buffer = new char[SHORT_BUFFER_LENGTH];
                         receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                         newCount = recieveBestCount(buffer);
-                        if (DEBUG_COMM) printf("#%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
+                        if (DEBUG_COMM) printf("X11: #%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
                         delete buffer;
                         if (newCount < *bestCount)
                         {
                             *bestCount = newCount;
                             *solutionFound = 0;
-                            if (DEBUG_COMM) printf("#%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, *bestCount);
+                            if (DEBUG_COMM) printf("X12: #%d: New bestCount (%d) is better than the old count (%d) \n", globals.myRank, newCount, *bestCount);
                         }
                         break;
                     default:
-                        printf("#%d: L313 neznamy typ zpravy!\n", globals.myRank);
+                        printf("X13: #%d: neznamy typ zpravy!\n", globals.myRank);
                         break;
               }
             }
@@ -319,14 +319,14 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 
 		if(DEBUG_STACK)
 		{
-			printf("#%d: I am popping: ", globals.myRank);
+			printf("X14: #%d: I am popping: ", globals.myRank);
 			t->printDirectionSymbol(n->direction);
 			printf("\n");
 		}
 
 		while( lastNode->prevNode != NULL && n->steps < lastNode->steps)
 		{
-			if(DEBUG_STACK) printf("#%d: dead end, reverting parent\n", globals.myRank);
+			if(DEBUG_STACK) printf("X15: #%d: dead end, reverting parent\n", globals.myRank);
 			t->move( t->oppositeDirection(lastNode->prevNode->direction) ); // revert parent move
 
 			Node * lastNodePrevNode = lastNode->prevNode;
@@ -339,14 +339,14 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 
 		if( n->prevNode != NULL && n->prevNode->direction == t->oppositeDirection(n->direction) ) // simple optimization, don't make moves there and back
 		{
-			if(DEBUG_STACK) printf("#%d: opposite move, skipping\n", globals.myRank);
+			if(DEBUG_STACK) printf("X16: #%d: opposite move, skipping\n", globals.myRank);
 			delete n;
 			continue;
 		}
 
 		if( t->move(n->direction) == -1) // INVALID_MOVE
 		{
-			if(DEBUG_STACK) printf("#%d: invalid move, skipping\n", globals.myRank);
+			if(DEBUG_STACK) printf("X17: #%d: invalid move, skipping\n", globals.myRank);
 			delete n;
 			continue;
 		}
@@ -355,15 +355,15 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 		lastNode->prevNode = n->prevNode;
 		lastNode->steps = n->steps;
 
-		if(DEBUG_STACK) printf("#%d: steps: %d\n", globals.myRank, n->steps);
+		if(DEBUG_STACK) printf("X18: #%d: steps: %d\n", globals.myRank, n->steps);
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, *bestCount); // TODO: send bestCount to other processors
+			printf("X19: Sorted! Steps: %d; bestCount: %d\n", n->steps, *bestCount); // TODO: send bestCount to other processors
 			if( n->steps < *bestCount )
 			{
 				*bestCount = n->steps;
-				printf("New solution found with %d steps\n", *bestCount);
+				printf("X20: New solution found with %d steps\n", *bestCount);
 				copySolution( bestSolution, n);
                 broadcastBestCount(*bestCount);
                 *solutionFound = 1;
@@ -377,19 +377,19 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 		{
             if( toInitialSend > 0 )
             {
-                if (DEBUG_COMM) printf("#%d: I am sending INITIAL send work to #%d \n", globals.myRank, toInitialSend);
+                if (DEBUG_COMM) printf("X21: #%d: I am sending INITIAL send work to #%d \n", globals.myRank, toInitialSend);
                 sendWork(toInitialSend, n);
                 toInitialSend--;
             }
             else if( sendWorkTo != -1)
             {
-                if (DEBUG_COMM) printf("#%d: I am sending usual work to #%d \n", globals.myRank, sendWorkTo);
+                if (DEBUG_COMM) printf("X22: #%d: I am sending usual work to #%d \n", globals.myRank, sendWorkTo);
                 sendWork(sendWorkTo, n);
                 sendWorkTo = -1;
             }
             else
             {
-                if( DEBUG_STACK) printf("#%d: inserting moves\n", globals.myRank);
+                if( DEBUG_STACK) printf("X23: #%d: inserting moves\n", globals.myRank);
                 for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
                 {
                     Direction direction = Direction(dir);
@@ -399,7 +399,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 		}
 		else
 		{
-			if( DEBUG_STACK) printf("#%d: reverting move\n", globals.myRank);
+			if( DEBUG_STACK) printf("X24: #%d: reverting move\n", globals.myRank);
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			delete n;
 		}
@@ -460,7 +460,7 @@ int idleState(Stack * s, Triangle * t)
                 case MSG_TOKEN_WHITE:
                     sendWhiteToken();
                     break;
-                default : printf("#%d: L463 neznamy typ zpravy!\n", globals.myRank); break;
+                default : printf("X25: #%d: neznamy typ zpravy!\n", globals.myRank); break;
             }
         }
     }
@@ -483,7 +483,7 @@ int tokenState(Stack * s, Triangle * t)
                     return IDLE;
                 case MSG_TOKEN_WHITE:
                     return FINISH;
-                default : printf("#%d: L486 neznamy typ zpravy!\n", globals.myRank); break;
+                default : printf("X26: #%d: L486 neznamy typ zpravy!\n", globals.myRank); break;
             }
         }
     }
@@ -541,12 +541,12 @@ int main( int argc, char** argv )
 
 	if( globals.myRank == 0 )
 	{
-		printf("#0: i can tell you there are %d processors. \n", globals.numberOfProcessors);
+		printf("X27: #0: i can tell you there are %d processors. \n", globals.numberOfProcessors);
 		//INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
 
 		t = new Triangle(n);
 		t->fill();
-		printf("#0: Default triangle:\n");
+		printf("X28: #0: Default triangle:\n");
 		t->print();
 
 		for( int i = 0; i < q; i++ )
@@ -554,7 +554,7 @@ int main( int argc, char** argv )
 			t->randomStep();
 		}
 
-		printf("#0: Triangle after shuffle:\n");
+		printf("X29: #0: Triangle after shuffle:\n");
 		t->print();
 		printf("==============================\n");
 
@@ -583,7 +583,7 @@ int main( int argc, char** argv )
 
         if (DEBUG_COMM)
         {
-            printf("%d: triangle:", globals.myRank);
+            printf("X30: %d: triangle:", globals.myRank);
             t->print();
             printf("\n");
         }
@@ -623,21 +623,21 @@ int main( int argc, char** argv )
         switch (nextState)
         {
             case WORK:
-                if (DEBUG_COMM) printf("#%d: I am changing my state to WORK. \n", globals.myRank);
+                if (DEBUG_COMM) printf("X31: #%d: I am changing my state to WORK. \n", globals.myRank);
                 nextState = workState(s, toInitialSend, t, &bestCount, bestSolution, &solutionFound);
                 break;
             case IDLE:
-                if (DEBUG_COMM) printf("#%d: I am changing my state to IDLE. \n", globals.myRank);
+                if (DEBUG_COMM) printf("X32: #%d: I am changing my state to IDLE. \n", globals.myRank);
                 nextState = idleState(s, t);
                 break;
             case TOKEN:
-                if (DEBUG_COMM) printf("#%d: I am changing my state to TOKEN. \n", globals.myRank);
+                if (DEBUG_COMM) printf("X33: #%d: I am changing my state to TOKEN. \n", globals.myRank);
                 nextState = tokenState(s, t);
                 break;
         }
     }
     while( nextState != FINISH );
-    if (DEBUG_COMM) printf("#%d: I am changing my state to FINISH. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X34: #%d: I am changing my state to FINISH. \n", globals.myRank);
 
     if( globals.myRank == 0 )
     {
@@ -662,7 +662,7 @@ int main( int argc, char** argv )
                     if (bestSize < size) {
                         bestSize = size;
                         bestSolution = tempBestSolution;
-                        if( DEBUG_STACK) printf("#%d: Found better solution \n", globals.myRank);
+                        if( DEBUG_STACK) printf("X35: #%d: Found better solution \n", globals.myRank);
                     }
                 }
                 source++;
@@ -679,7 +679,7 @@ int main( int argc, char** argv )
     // MPI_Finalize
 
 	printf("==============================\n");
-	printf("End: best solution found with %d steps. Moves:\n", bestCount);
+	printf("X36: End: best solution found with %d steps. Moves:\n", bestCount);
 	for( int i = bestCount - 1; i >= 0; i-- )
 	{
 		t->printDirectionSymbol(bestSolution[i]);
