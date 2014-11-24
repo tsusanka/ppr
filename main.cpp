@@ -19,8 +19,9 @@
 #define MSG_TOKEN_WHITE  1004
 #define MSG_FINISH       1005
 #define MSG_NEW_BEST_SOLUTION 1006
-#define MSG_FINISH_SOLUTION 1007
+#define MSG_FINISH_WITH_SOLUTION 1007
 #define MSG_SHUFFLED_TRIANGLE 1008
+#define MSG_FINISH_WITHOUT_SOLUTION 1009
 
 #define WORK       8004
 #define IDLE       8005
@@ -63,8 +64,8 @@ void printMSGFlag(int flag)
         case MSG_NEW_BEST_SOLUTION:
             printf("MSG_NEW_BEST_SOLUTION");
             break;
-        case MSG_FINISH_SOLUTION:
-            printf("MSG_FINISH_SOLUTION");
+        case MSG_FINISH_WITH_SOLUTION:
+            printf("MSG_FINISH_WITH_SOLUTION");
             break;
         case MSG_SHUFFLED_TRIANGLE:
             printf("MSG_SHUFFLED_TRIANGLE");
@@ -286,14 +287,14 @@ void sendMyBestSolution(Direction * bestSolution)
     int a = -1;
     if (DEBUG_STACK) printf("X8: #%d: I'm sending my best solution to #0. \n", globals.myRank);
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
-    send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+    send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
 }
 
 
 void sendNoSolutionFound() {
     int position = 0;
     if (DEBUG_STACK) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
-    send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+    send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
 }
 
 
@@ -761,11 +762,11 @@ int main( int argc, char** argv )
             {
                 int flag = 0;
                 /* checking if message has arrived */
-                MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
+                MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
                 if (flag)
                 {
                     /* receiving message by blocking receive */
-                    receive(&message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status); // MPI_INT -> MPI_PACKED?
+                    receive(&message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD, &status); // MPI_INT -> MPI_PACKED?
                     if (message != NULL)
                     {
                         tempBestSolution = unpackBestSolution(message, &size);
@@ -784,6 +785,13 @@ int main( int argc, char** argv )
                     }
                     source++;
                 }
+                MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD, &flag, &status);
+                if (flag)
+                {
+                    receive(&message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD, &status); //just continue
+                    source++;
+                }
+
             }
         }
     }
