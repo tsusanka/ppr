@@ -180,6 +180,7 @@ int Triangle::move(Direction where, int dx, int dy) // direction only for printi
 
 void Triangle::print()
 {
+    printf("Triangle size %d<n", size);
 	for (int i = 0; i < size; i++)
 	{
 		// padding
