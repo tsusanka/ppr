@@ -20,6 +20,7 @@
 #define MSG_FINISH       1005
 #define MSG_NEW_BEST_SOLUTION 1006
 #define MSG_FINISH_SOLUTION 1007
+#define MSG_SHUFFLED_TRIANGLE 1008
 
 #define WORK       8004
 #define IDLE       8005
@@ -495,7 +496,7 @@ int main( int argc, char** argv )
     srand(time(NULL));
 
 	/* MPI VARIABLES */
-	int tag = 1;
+	int tag = 9999;
 	int flag;
 	MPI_Status status;
 	int position = 0;
@@ -542,7 +543,6 @@ int main( int argc, char** argv )
 	if( globals.myRank == 0 )
 	{
 		printf("X27: #0: i can tell you there are %d processors. \n", globals.numberOfProcessors);
-		//INIT ARGS AND TRIANGLE AND SEND TO OTHER PROCESSES
 
 		t = new Triangle(n);
 		t->fill();
@@ -562,7 +562,7 @@ int main( int argc, char** argv )
 		char * message = t->pack(&position);
 		for (int destination = 1; destination < globals.numberOfProcessors; destination++ )
 		{
-			send( (void*) message, position, MPI_PACKED, destination, tag, MPI_COMM_WORLD );
+			send( (void*) message, position, MPI_PACKED, destination, MSG_SHUFFLED_TRIANGLE, MPI_COMM_WORLD );
 		}
 	}
 	else
