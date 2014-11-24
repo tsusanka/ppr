@@ -203,6 +203,12 @@ void sendWhiteToken() {
     send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
 }
 
+void sendNoWork(int to)
+{
+    int position = 0;
+    send (NULL, position, MPI_CHAR, to, MSG_WORK_NOWORK, MPI_COMM_WORLD);
+}
+
 /**
  * sends finish flag to all processors except itself. should be called only by myRank = 0
  */
@@ -271,14 +277,10 @@ int recieveBestCount( char * message )
     return recievedCount;
 }
 
-void receiveBestSolution()
+void receiveBestSolution(char * buffer)
 {
-    char * buffer = new char[SHORT_BUFFER_LENGTH];
-    MPI_Status status;
-    receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     int newCount = recieveBestCount(buffer);
     if (DEBUG_COMM) printf("X11: #%d: I've received new best solution with steps count %d \n", globals.myRank, newCount);
-    delete buffer;
     if (newCount < globals.bestCount)
     {
         globals.bestCount = newCount;
@@ -309,6 +311,9 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
             if (flag)
             {
+                char * buffer = new char[SHORT_BUFFER_LENGTH];
+                MPI_Status status;
+                receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (DEBUG_COMM)
                 {
                     printf("X10: #%d: I've received a message with tag ", globals.myRank);
@@ -325,12 +330,15 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
                         sendBlackToken();
                         break;
                     case MSG_NEW_BEST_SOLUTION:
-                        receiveBestSolution( );
+                        receiveBestSolution(buffer);
+                        break;
+                    case MSG_WORK_NOWORK:
                         break;
                     default:
                         printf("X13: #%d: neznamy typ zpravy! tag %d\n", globals.myRank, status.MPI_TAG);
                         break;
-              }
+                }
+                delete buffer;
             }
         }
 		Node* n = s->pop();
@@ -456,10 +464,17 @@ int idleState(Stack * s, Triangle * t)
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (flag)
         {
+            if (status.MPI_TAG == MSG_WORK_SENT)
+            {
+                receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+            }
+            else
+            {
+                receive( message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+            }
             switch (status.MPI_TAG)
             {
                 case MSG_WORK_SENT : // accept work and switch to workState
-                    receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
                     fillStackFromMessage(s, t, message);
                     return WORK;
                 case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == globals.numberOfProcessors-1 and myrank == 0 sent white token
@@ -479,7 +494,10 @@ int idleState(Stack * s, Triangle * t)
                     sendWhiteToken();
                     break;
                 case MSG_NEW_BEST_SOLUTION:
-                    receiveBestSolution();
+                    receiveBestSolution(message);
+                    break;
+                case MSG_WORK_REQUEST:
+                    sendNoWork(status.MPI_SOURCE);
                     break;
                 default : printf("X25: #%d: neznamy typ zpravy, tag %d!\n", globals.myRank, status.MPI_TAG); break;
             }
