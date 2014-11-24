@@ -63,6 +63,9 @@ void printMSGFlag(int flag)
         case MSG_FINISH_SOLUTION:
             printf("MSG_FINISH_SOLUTION");
             break;
+        case MSG_SHUFFLED_TRIANGLE:
+            printf("MSG_SHUFFLED_TRIANGLE");
+            break;
         default:
             printf("X1: #%d: aaay caramba, i don't know flag %d\n", globals.myRank, flag);
             break;
