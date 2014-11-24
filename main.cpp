@@ -188,12 +188,16 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         {
             break;
         }
+        printf("X46: #%d: fillStackFromMessage> premove triangle: ", globals.myRank);
+        t->print();
         int result = t->move ( direction );
-        printf("X43: #%d: fillStackFromMessage> moving :%d\n", globals.myRank, number);
+        printf("X43: #%d: fillStackFromMessage> moving: ", globals.myRank);
         printDirectionSymbol(direction);
         printf("\n");
         if( result == -1 )
         {
+            printf("X46: #%d: fillStackFromMessage> aftermove triangle: ", globals.myRank);
+            t->print();
             printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
         }
         Node * n = new Node(lastNode, direction, i++);
