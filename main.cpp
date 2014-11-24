@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <cstddef>
 #include <assert.h>
 #include "mpi.h"
 #include "main.h"
-#include <unistd.h>
-#include <time.h>
 
 #define DEBUG false
 #define CHECK_MSG_AMOUNT  100
@@ -20,6 +17,8 @@
 #define MSG_TOKEN_WHITE  1004
 #define MSG_FINISH       1005
 #define MSG_NEW_BEST_SOLUTION 1006
+#define MSG_FINISH_SOLUTION 1007
+
 
 #define WORK       8004
 #define IDLE       8005
@@ -109,6 +108,10 @@ void broadcastBestCount(int count, int myRank, int numberOfProcessors) {
     int position = 0;
     MPI_Pack(&count, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     for (int i = 0; i <  numberOfProcessors; ++i) {
+        if ( i == myRank )
+        {
+            continue;
+        }
         MPI_Send (buffer, position, MPI_PACKED, i, MSG_NEW_BEST_SOLUTION, MPI_COMM_WORLD);
     }
 }
@@ -130,20 +133,61 @@ void sendWhiteToken(int myRank, int numberOfProcessors) {
     MPI_Send (NULL, position, MPI_CHAR, myRank + 1 % numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
 }
 
-void sendFinish(int myRank, int numberOfProcessors) {
+/**
+ * sends finish flag to all processors except itself
+ */
+void sendFinish(int numberOfProcessors)
+{
     int position = 0;
-    MPI_Send (NULL, position, MPI_CHAR, myRank + 1 % numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+    for (int i = 1; i < numberOfProcessors; ++i) // intentionally from 1 because of myRank = 0
+    {
+        MPI_Send (NULL, position, MPI_CHAR, i, MSG_FINISH, MPI_COMM_WORLD);
+    }
+}
+
+/**
+ * sends processor's best solution to myRank 0
+ */
+void sendMyBestSolution(Direction * bestSolution, int bestCount)
+{
+    char * buffer = new char[LENGTH];
+    int position = 0;
+    for(int i = 0; i < bestCount; i++)
+    {
+        int a = (int) bestSolution[i];
+        MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+    }
+    int a = -1;
+    MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
+    MPI_Send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+}
+
+Direction * unpackBestSolution(char * message, int* size)
+{
+    int position = 0;
+    int number = 0;
+    *size = 0;
+    Direction direction;
+    while(true)
+    {
+        MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
+        direction = (Direction) number;
+        if( direction == -1 )
+        {
+            break;
+        }
+        (*size)++;
+    }
 }
 
 /**
  * Deals with all the work
  */
-int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestCount, int numberOfProcessors)
+int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int * bestCount, int numberOfProcessors, Direction * bestSolution, int * solutionFound)
 {
     int checkMsgCounter = 0;
     int flag;
     MPI_Status status;
-    Direction * bestSolution = new Direction[bestCount];
     int sendWorkTo = -1;
 
     // ======== DEPTH-FIRST SEARCH ==========//
@@ -169,8 +213,9 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
                         char * buffer = new char[SHORT_BUFFER_LENGTH];
                         MPI_Recv(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                         int newCount = recieveBestCount(buffer);
-                        if(newCount < bestCount){
-                            bestCount = newCount;
+                        if(newCount < *bestCount){
+                            *bestCount = newCount;
+                            *solutionFound = 0;
                         }
                         break;
                     default : printf("neznamy typ zpravy!\n"); break;
@@ -222,19 +267,20 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
 		if( t->isSorted() ) // this is a solution
 		{
 			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount); // TODO: send bestCount to other processors
-			if( n->steps < bestCount )
+			if( n->steps < *bestCount )
 			{
-				bestCount = n->steps;
+				*bestCount = n->steps;
 				printf("New solution found with %d steps\n", bestCount);
 				copySolution( bestSolution, n);
-                broadcastBestCount(bestCount,myRank,numberOfProcessors);
+                broadcastBestCount(*bestCount,myRank,numberOfProcessors);
+                *solutionFound = 1;
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert parent
 			continue;
 		}
 
-		if( n->steps < bestCount )
+		if( n->steps < *bestCount )
 		{
             if( toInitialSend > 0 )
             {
@@ -476,19 +522,21 @@ int main( int argc, char** argv )
         fillStackFromMessage(s, t, message);
     }
 
+    Direction * bestSolution = new Direction[bestCount];
     int nextState = WORK;
+    int solutionFound = 0;
     do
     {
         switch (nextState)
         {
             case WORK:
-                nextState = workState(s, toInitialSend, t, myRank, bestCount, numberOfProcessors);
+                nextState = workState(s, toInitialSend, t, myRank, &bestCount, numberOfProcessors, bestSolution, &solutionFound);
                 break;
             case IDLE:
                 nextState = idleState(s, t, myRank, numberOfProcessors);
                 break;
             case TOKEN:
-                nextState = tokenState(s, t);
+                nextState = tokenState(s, t, numberOfProcessors);
                 break;
         }
     }
@@ -496,13 +544,38 @@ int main( int argc, char** argv )
 
     if( myRank == 0 )
     {
-//        sendFinish();
+        sendFinish(numberOfProcessors);
+        int bestSize = 0;
+        if (solutionFound)
+        {
+            bestSize = bestCount;
+        }
+        char message[LENGTH];
+        int size = 0;
+        Direction * tempBestSolution;
+        for (int source=1; source < numberOfProcessors;)
+        {
+            /* checking if message has arrived */
+            MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
+            if (flag) {
+                /* receiving message by blocking receive */
+                MPI_Recv(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
+                tempBestSolution = unpackBestSolution(message, &size);
+                if (bestSize < size)
+                {
+                    bestSize = size;
+                    bestSolution = tempBestSolution;
+                }
+                source++;
+            }
+        }
+    }
+    else if( solutionFound )
+    {
+        sendMyBestSolution(bestSolution, bestCount);
     }
 
-    // TODO gather all results
     // MPI_Finalize
-
-    Direction * bestSolution = new Direction[LENGTH];
 
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
