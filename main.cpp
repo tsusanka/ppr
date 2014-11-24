@@ -437,16 +437,13 @@ int idleState(Stack * s, Triangle * t)
         if( !sent )
         {
             int dest;
-            printf("AA");
             do
             {
                 dest = rand() % globals.numberOfProcessors; // generating destination randomly except to yourself
             }
             while( dest == globals.myRank);
-            printf("BB");
             send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
             sent = 1;
-            printf("CC");
         }
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (flag)
@@ -473,7 +470,7 @@ int idleState(Stack * s, Triangle * t)
                 case MSG_TOKEN_WHITE:
                     sendWhiteToken();
                     break;
-                default : printf("X25: #%d: neznamy typ zpravy!\n", globals.myRank); break;
+                default : printf("X25: #%d: neznamy typ zpravy, tag %d!\n", globals.myRank, status.MPI_TAG); break;
             }
         }
     }
