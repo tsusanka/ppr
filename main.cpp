@@ -67,6 +67,9 @@ void printMSGFlag(int flag)
         case MSG_FINISH_WITH_SOLUTION:
             printf("MSG_FINISH_WITH_SOLUTION");
             break;
+        case MSG_FINISH_WITHOUT_SOLUTION:
+            printf("MSG_FINISH_WITHOUT_SOLUTION");
+            break;
         case MSG_SHUFFLED_TRIANGLE:
             printf("MSG_SHUFFLED_TRIANGLE");
             break;
