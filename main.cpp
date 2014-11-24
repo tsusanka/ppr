@@ -102,22 +102,53 @@ int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MP
     return result;
 }
 
+void doMagicREMOVEORDIE(Direction dir)
+{
+    switch (dir)
+    {
+        case LEFT:
+            printf("<-");
+            break;
+        case RIGHT:
+            printf("->");
+            break;
+        case BOTTOM_LEFT:
+            printf("./");
+            break;
+        case BOTTOM_RIGHT:
+            printf("\\.");
+            break;
+        case TOP_LEFT:
+            printf("|\\");
+            break;
+        case TOP_RIGHT:
+            printf("/|");
+            break;
+        default:
+            printf("invalid direction");
+            throw -2;
+    }
+}
+
 void copySolution( Direction * where, Node * from )
 {
 	Node* node = from;
 	int i = 0;
 	if (node == NULL)
 	{
-		printf("X4: Something is wrong; no solution found.\n"); // remove after fix
+		printf("X4: Something is wrong; no solution found.\n");
 		return;
 	}
+	printf("X40: I am gonna print the solution just for you.\n");
 
 	do
 	{
+        doMagicREMOVEORDIE(node->direction);
 		where[i++] = node->direction;
 		node = node->prevNode;
 	}
 	while (node != NULL);
+    printf("\n");
 }
 
 Direction * getPath(Node * lastNode)
