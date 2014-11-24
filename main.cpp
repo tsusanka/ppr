@@ -471,6 +471,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
  */
 int idleState(Stack * s, Triangle * t)
 {
+    if(globals.numberOfProcessors == 1) return FINISH;
     int flag;
     MPI_Status status;
     char message[LENGTH];
@@ -718,39 +719,36 @@ int main( int argc, char** argv )
 
     if( globals.myRank == 0 )
     {
-        sendFinish();
-        int bestSize = 0;
-        Direction * tempBestSolution;
-        if (globals.solutionFound)
-        {
-            bestSize = globals.bestCount;
-        }
-        char message[LENGTH];
-        int size = 0;
-        for (int source=1; source < globals.numberOfProcessors;)
-        {
-            int flag = 0;
-            /* checking if message has arrived */
-            MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
-            if (flag) {
-                /* receiving message by blocking receive */
-                receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
-                if(message != NULL)
-                {
-                    tempBestSolution = unpackBestSolution(message, &size);
-                    if (size < bestSize)
-                    {
-                        delete bestSolution;
-                        bestSize = size;
-                        bestSolution = tempBestSolution;
-                        if( DEBUG_STACK) printf("X35: #%d: Found better solution \n", globals.myRank);
+        if( globals.numberOfProcessors > 1 ) {
+            sendFinish();
+            int bestSize = 0;
+            Direction *tempBestSolution;
+            if (globals.solutionFound) {
+                bestSize = globals.bestCount;
+            }
+            char message[LENGTH];
+            int size = 0;
+            for (int source = 1; source < globals.numberOfProcessors;) {
+                int flag = 0;
+                /* checking if message has arrived */
+                MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
+                if (flag) {
+                    /* receiving message by blocking receive */
+                    receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
+                    if (message != NULL) {
+                        tempBestSolution = unpackBestSolution(message, &size);
+                        if (size < bestSize) {
+                            delete bestSolution;
+                            bestSize = size;
+                            bestSolution = tempBestSolution;
+                            if (DEBUG_STACK) printf("X35: #%d: Found better solution \n", globals.myRank);
+                        }
+                        else {
+                            delete[] tempBestSolution;
+                        }
                     }
-                    else
-                    {
-                        delete [] tempBestSolution;
-                    }
+                    source++;
                 }
-                source++;
             }
         }
     }
