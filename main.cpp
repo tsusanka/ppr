@@ -129,7 +129,7 @@ void printDirectionSymbol(Direction dir)
             break;
         default:
             printf("invalid direction:%d",dir);
-            throw -2;
+            break;
     }
 }
 
