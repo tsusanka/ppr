@@ -106,22 +106,9 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
 {
     int checkMsgCounter = 0;
     int flag;
-    char message[LENGTH];
     MPI_Status status;
     Direction * bestSolution = new Direction[bestCount];
     int sendWorkTo = -1;
-
-    // the first work ever that is sent to other processors
-    if( myRank != 0)
-    {
-        while (true)
-        {
-            MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
-            if( flag ) break;
-        }
-        MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-        fillStackFromMessage(s, t, message);
-    }
 
     // ======== DEPTH-FIRST SEARCH ==========//
 
@@ -230,6 +217,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
 		}
 
 	}
+    delete lastNode;
     return IDLE;
 }
 
@@ -270,19 +258,16 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
                     return WORK;
                 case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == numberOfProcessors-1 and myrank == 0 sent white token
                     attempts++;
-                    if( attempts >= numberOfProcessor-1)
+                    if( attempts >= numberOfProcessor-1 && myRank == 0) // number of other processors
                     {
-                        if (myRank == 0)
-                        {
-                            return TOKEN;
-                        }
+                        return TOKEN;
                     }
                     sent = 0;
                     break;
                 case MSG_FINISH : // finish, switch to finish state
-                                        return FINISH;
+                    return FINISH;
                 case MSG_TOKEN : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
-                                break;
+                    break;
                 default : printf("neznamy typ zpravy!\n"); break;
             }
         }
@@ -411,6 +396,17 @@ int main( int argc, char** argv )
             s->push( initialNode );
         }
     }
+    else // sends first ever work
+    {
+        char message[LENGTH]; // TODO dynamic?
+        while (true)
+        {
+            MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
+            if( flag ) break;
+        }
+        MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, flag, MPI_COMM_WORLD, &status );
+        fillStackFromMessage(s, t, message);
+    }
 
     int nextState = WORK;
     do
@@ -434,6 +430,8 @@ int main( int argc, char** argv )
     // TODO gather all results
     // MPI_Finalize
 
+    Direction * bestSolution = new Direction[LENGTH];
+
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
 	for( int i = bestCount - 1; i >= 0; i-- )
@@ -445,7 +443,6 @@ int main( int argc, char** argv )
 
 	delete s;
 	delete t;
-	delete lastNode;
 
 	return 0;
 }
