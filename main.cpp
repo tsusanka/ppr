@@ -710,14 +710,14 @@ int main( int argc, char** argv )
     }
     else // sends first ever work
     {
-        printf("X38: #%d: I'm waiting for initial work 1.", globals.myRank);
+        printf("X38: #%d: I'm waiting for initial work \n", globals.myRank);
         int flag = 0;
         char message[LENGTH]; // TODO dynamic?
         while (!flag)
         {
             MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
         }
-        printf("X37: #%d: Probe request flag true, recieving 2.", globals.myRank);
+        printf("X37: #%d: Probe request flag true, recieving \n", globals.myRank);
         receive( message, LENGTH, MPI_PACKED, 0, MSG_WORK_SENT, MPI_COMM_WORLD, &status );
         fillStackFromMessage(s, t, message);
     }
