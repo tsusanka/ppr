@@ -85,13 +85,14 @@ int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int 
 
 int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
 {
+    int result = MPI_Recv(buf, count, datatype, source, tag, comm, status);
     if (DEBUG_COMM)
     {
-        printf("X3: #%d: I am receiving message from #%d with tag ", globals.myRank, source);
-        printMSGFlag(tag);
-        printf("\n");
+        printf("X3: #%d: I am receiving message with tag ", globals.myRank);
+        printMSGFlag( status->MPI_TAG );
+        printf(" from #%d\n", status->MPI_SOURCE);
     }
-    return MPI_Recv(buf, count, datatype, source, tag, comm, status);
+    return result;
 }
 
 void copySolution( Direction * where, Node * from )
