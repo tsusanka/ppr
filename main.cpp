@@ -293,7 +293,7 @@ void sendMyBestSolution(Direction * bestSolution)
 void sendNoSolutionFound() {
     int position = 0;
     if (DEBUG_STACK) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
-    send(  NULL, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+    send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
 
 
@@ -308,21 +308,17 @@ Direction * unpackBestSolution(char * message, int* size)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
-        printf("X41: #%d: unpackBestSolution> DIRECTION recieved:", globals.myRank);
-        printDirectionSymbol(direction);
-        printf("\n");
+        if( DEBUG_STACK ){
+            printf("X41: #%d: unpackBestSolution> DIRECTION recieved:", globals.myRank);
+            printDirectionSymbol(direction);
+            printf("\n");
+        }
         if( direction == -1 )
         {
             break;
         }
         result[*size] = direction;
         (*size)++;
-    }
-    if( DEBUG_STACK )
-    {
-        for (int i = 0; i < (*size); ++i) {
-            printf("unpackBestSolution> result[%d] is %d\n", i, (int) result[i]);
-        }
     }
     return result;
 }
@@ -608,6 +604,7 @@ int main( int argc, char** argv )
 	/* MPI VARIABLES */
 	int tag = 9999;
     globals.nullBuffer = new char[1];
+    globals.nullBuffer[0] = -1;
 	MPI_Status status;
 	int position = 0;
 
@@ -768,7 +765,7 @@ int main( int argc, char** argv )
                 if (flag)
                 {
                     /* receiving message by blocking receive */
-                    receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
+                    receive(&message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status); // MPI_INT -> MPI_PACKED?
                     if (message != NULL)
                     {
                         tempBestSolution = unpackBestSolution(message, &size);
