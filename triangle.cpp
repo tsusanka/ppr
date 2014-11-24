@@ -162,10 +162,15 @@ int Triangle::move(Direction where)
 
 int Triangle::move(Direction where, int dx, int dy) // direction only for printing purposes
 {
-	if( emptyY + dy < 0 || emptyY + dy > emptyX + dx) // The maximum y in the X depth in the triangle is X
-		return INVALID_MOVE;
-	if( emptyX + dx < 0 || emptyX + dx >= size)
-		return INVALID_MOVE;
+	if( emptyY + dy < 0 || emptyY + dy > emptyX + dx){
+        // The maximum y in the X depth in the triangle is X
+        printf("invalid move, size %d, emptyY %d, emptyX %d, dx %d, dy %d\n",size, emptyY, emptyX, dx, dy);
+        return INVALID_MOVE;
+    }
+	if( emptyX + dx < 0 || emptyX + dx >= size){
+        printf("invalid move2, size %d, emptyY %d, emptyX %d, dx %d, dy %d\n",size, emptyY, emptyX, dx, dy);
+        return INVALID_MOVE;
+    }
 
 	array[emptyX][emptyY] = array[emptyX + dx][emptyY + dy];
 	array[emptyX + dx][emptyY + dy] = EMPTY;
@@ -180,7 +185,7 @@ int Triangle::move(Direction where, int dx, int dy) // direction only for printi
 
 void Triangle::print()
 {
-    printf("Triangle size %d<n", size);
+    printf("print__ Triangle size %d\n", size);
 	for (int i = 0; i < size; i++)
 	{
 		// padding
