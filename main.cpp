@@ -36,6 +36,18 @@ struct Globals
 
 Globals globals;
 
+int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
+{
+    if (DEBUG_VERBOSE) printf("#%d sends message to #%d with tag %d\n", globals.myRank, dest, tag);
+    return MPI_Send( (void*) buffer, position, datatype, dest, tag, comm );
+}
+
+int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm comm, MPI_Status *status)
+{
+    if (DEBUG_VERBOSE) printf("#%d receives message from #%d with tag %d\n", globals.myRank, source, tag);
+    return MPI_Recv(buf, count, datatype, source, tag, comm, status);
+}
+
 void copySolution( Direction * where, Node * from )
 {
 	Node* node = from;
@@ -95,12 +107,6 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     s->push(lastNode);
 }
 
-int send(const void *buffer, int position, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm)
-{
-    printf("#%d sends message to #%d with tag %d\n", globals.myRank, dest, tag);
-    MPI_Send( (void*) buffer, position, datatype, dest, tag, comm );
-}
-
 /**
  * Sends node to defined processor
  */
@@ -128,7 +134,7 @@ void broadcastBestCount(int count) {
         {
             continue;
         }
-        MPI_Send (buffer, position, MPI_PACKED, i, MSG_NEW_BEST_SOLUTION, MPI_COMM_WORLD);
+        send (buffer, position, MPI_PACKED, i, MSG_NEW_BEST_SOLUTION, MPI_COMM_WORLD);
     }
 }
 
@@ -142,12 +148,12 @@ int recieveBestCount( char * message )
 
 void sendBlackToken() {
     int position = 0;
-    MPI_Send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_BLACK, MPI_COMM_WORLD);
 }
 
 void sendWhiteToken() {
     int position = 0;
-    MPI_Send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
+    send (NULL, position, MPI_CHAR, globals.myRank + 1 % globals.numberOfProcessors, MSG_TOKEN_WHITE, MPI_COMM_WORLD);
 }
 
 /**
@@ -158,7 +164,7 @@ void sendFinish()
     int position = 0;
     for (int i = 1; i < globals.numberOfProcessors; ++i) // intentionally from 1 because of myRank = 0
     {
-        MPI_Send (NULL, position, MPI_CHAR, i, MSG_FINISH, MPI_COMM_WORLD);
+        send (NULL, position, MPI_CHAR, i, MSG_FINISH, MPI_COMM_WORLD);
     }
 }
 
@@ -176,13 +182,13 @@ void sendMyBestSolution(Direction * bestSolution, int bestCount)
     }
     int a = -1;
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
-    MPI_Send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+    send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
 
 
 void sendNoSolutionFound() {
     int position = 0;
-    MPI_Send(  NULL, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
+    send(  NULL, position, MPI_PACKED, 0, MSG_FINISH_SOLUTION, MPI_COMM_WORLD );
 }
 
 
@@ -240,7 +246,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
                         break;
                     case MSG_NEW_BEST_SOLUTION:
                         buffer = new char[SHORT_BUFFER_LENGTH];
-                        MPI_Recv(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                        receive(buffer, SHORT_BUFFER_LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                         newCount = recieveBestCount(buffer);
                         delete buffer;
                         if (newCount < *bestCount)
@@ -370,7 +376,7 @@ int idleState(Stack * s, Triangle * t)
                 dest = rand() % globals.numberOfProcessors; // generating destination randomly except to yourself
             }
             while( dest != globals.myRank);
-            MPI_Send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
+            send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
             sent = 1;
         }
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
@@ -379,7 +385,7 @@ int idleState(Stack * s, Triangle * t)
             switch (status.MPI_TAG)
             {
                 case MSG_WORK_SENT : // accept work and switch to workState
-                    MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+                    receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
                     fillStackFromMessage(s, t, message);
                     return WORK;
                 case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == globals.numberOfProcessors-1 and myrank == 0 sent white token
@@ -503,7 +509,7 @@ int main( int argc, char** argv )
 		char * message = t->pack(&position);
 		for (int destination = 1; destination < globals.numberOfProcessors; destination++ )
 		{
-			MPI_Send( (void*) message, position, MPI_PACKED, destination, tag, MPI_COMM_WORLD );
+			send( (void*) message, position, MPI_PACKED, destination, tag, MPI_COMM_WORLD );
 		}
 	}
 	else
@@ -519,7 +525,7 @@ int main( int argc, char** argv )
 		t = new Triangle(n);
 
 		char message[LENGTH]; // todo: dynamic length?
-		MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+		receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
 		t->unpack(message);
 
         if ( DEBUG )
@@ -552,7 +558,7 @@ int main( int argc, char** argv )
             MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
             if( flag ) break;
         }
-        MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, flag, MPI_COMM_WORLD, &status );
+        receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, flag, MPI_COMM_WORLD, &status );
         fillStackFromMessage(s, t, message);
     }
 
@@ -593,7 +599,7 @@ int main( int argc, char** argv )
             MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &flag, &status);
             if (flag) {
                 /* receiving message by blocking receive */
-                MPI_Recv(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
+                receive(&message, LENGTH, MPI_INT, MPI_ANY_SOURCE, MSG_FINISH_SOLUTION, MPI_COMM_WORLD, &status);
                 if(message != NULL) {
                     tempBestSolution = unpackBestSolution(message, &size);
                     if (bestSize < size) {
