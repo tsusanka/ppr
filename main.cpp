@@ -355,15 +355,15 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int * bestCount, Dire
 		lastNode->prevNode = n->prevNode;
 		lastNode->steps = n->steps;
 
-		if(DEBUG_STACK) printf("#%d: steps: %d\n", n->steps);
+		if(DEBUG_STACK) printf("#%d: steps: %d\n", globals.myRank, n->steps);
 
 		if( t->isSorted() ) // this is a solution
 		{
-			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, bestCount); // TODO: send bestCount to other processors
+			printf("Sorted! Steps: %d; bestCount: %d\n", n->steps, *bestCount); // TODO: send bestCount to other processors
 			if( n->steps < *bestCount )
 			{
 				*bestCount = n->steps;
-				printf("New solution found with %d steps\n", bestCount);
+				printf("New solution found with %d steps\n", *bestCount);
 				copySolution( bestSolution, n);
                 broadcastBestCount(*bestCount);
                 *solutionFound = 1;
