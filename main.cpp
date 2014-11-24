@@ -107,7 +107,6 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
     char message[LENGTH];
     MPI_Status status;
     Direction * bestSolution = new Direction[bestCount];
-    Node * lastNode = NULL;
 
     // the first work ever that is sent to other processors
     if( myRank != 0)
@@ -124,6 +123,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
     int sendWorkTo = -1;
     // ======== DEPTH-FIRST SEARCH ==========//
 
+    Node * lastNode = new Node(NULL, RIGHT, 1);
     while( s->getSize() > 0 )
 	{   
         if ((checkMsgCounter++ % CHECK_MSG_AMOUNT) == 0) // TODO: nehrozi ze pretece checkMsgCounter?
@@ -146,10 +146,6 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
             }
         }
 		Node* n = s->pop();
-        if (lastNode == NULL)
-        {
-            lastNode = n->prevNode; // ocheck
-        }
 
 		if( DEBUG )
 		{
@@ -245,10 +241,11 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
     char message[LENGTH];
     int attempts = 0;
     int sent = 0;
-    int position = 0; // ocheck
+    int position = 0;
 
     while(true)
     {
+        position = 0;
         if( !sent )
         {
             int dest;
@@ -257,7 +254,7 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
                 dest = rand() % numberOfProcessor; // generating destination randomly except to yourself
             }
             while( dest != myRank);
-            MPI_Send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD ); // ocheck
+            MPI_Send( (void*) NULL, position, MPI_CHAR, dest, MSG_WORK_REQUEST, MPI_COMM_WORLD );
             sent = 1;
         }
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
@@ -372,10 +369,9 @@ int main( int argc, char** argv )
 
 		// SEND
 		char * message = t->pack(&position);
-		for (int destination = 1; destination < numberOfProcessors; )
+		for (int destination = 1; destination < numberOfProcessors; destination++ )
 		{
 			MPI_Send( (void*) message, position, MPI_PACKED, destination, tag, MPI_COMM_WORLD );
-			destination++;
 		}
 	}
 	else
