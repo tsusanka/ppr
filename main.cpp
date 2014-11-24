@@ -318,6 +318,12 @@ Direction * unpackBestSolution(char * message, int* size)
         result[*size] = direction;
         (*size)++;
     }
+    if( DEBUG_STACK )
+    {
+        for (int i = 0; i < (*size); ++i) {
+            printf("unpackBestSolution> result[%d] is %d\n", i, (int) result[i]);
+        }
+    }
     return result;
 }
 
