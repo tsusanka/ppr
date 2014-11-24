@@ -417,7 +417,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 		if( t->isSorted() ) // this is a solution
 		{
 			printf("X19: #%d: Sorted! Steps: %d; globals.bestCount: %d\n", globals.myRank, n->steps, globals.bestCount); // TODO: send bestCount to other processors
-			if( n->steps < globals.bestCount )
+			if( n->steps <= globals.bestCount )
 			{
 				globals.bestCount = n->steps;
 				printf("X20: #%d: New solution found with %d steps\n", globals.myRank, globals.bestCount);
