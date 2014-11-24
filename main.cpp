@@ -59,7 +59,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     int position = 0;
 	int number;
     Direction direction;
-    Node * lastNode;
+    Node * lastNode = NULL;
     int i = 1;
     while(true)
     {
@@ -99,14 +99,17 @@ void sendWork(int to, Node * lastNode )
     MPI_Send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
 }
 
+/**
+ * Deals with all the work
+ */
 int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestCount )
 {
     int checkMsgCounter = 0;
-    int tag = 1;
     int flag;
     char message[LENGTH];
     MPI_Status status;
     Direction * bestSolution = new Direction[bestCount];
+    int sendWorkTo = -1;
 
     // the first work ever that is sent to other processors
     if( myRank != 0)
@@ -120,28 +123,24 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
         fillStackFromMessage(s, t, message);
     }
 
-    int sendWorkTo = -1;
     // ======== DEPTH-FIRST SEARCH ==========//
 
     Node * lastNode = new Node(NULL, RIGHT, 1);
     while( s->getSize() > 0 )
 	{   
-        if ((checkMsgCounter++ % CHECK_MSG_AMOUNT) == 0) // TODO: nehrozi ze pretece checkMsgCounter?
+        if ((checkMsgCounter++ % CHECK_MSG_AMOUNT) == 0)
         {
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
             if (flag)
             {
-                //prisla zprava, je treba ji obslouzit
-                //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
-                //a pripadne cislo chyby (status.MPI_ERROR)
                 switch (status.MPI_TAG)
                 {
-                   case MSG_WORK_REQUEST : // send work
-                                            sendWorkTo = status.MPI_SOURCE;
-                                           break;
-                   case MSG_TOKEN : // TODO send black token
-                                    break;
-                   default : printf("neznamy typ zpravy!\n"); break;
+                    case MSG_WORK_REQUEST :
+                        sendWorkTo = status.MPI_SOURCE;
+                        break;
+                    case MSG_TOKEN : // TODO send black token
+                        break;
+                    default : printf("neznamy typ zpravy!\n"); break;
               }
             }
         }
@@ -234,6 +233,9 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int bestC
     return IDLE;
 }
 
+/**
+ * Processors are idle - waiting for work or something like that
+ */
 int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
 {
     int flag;
@@ -260,12 +262,9 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
         MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
         if (flag)
         {
-            //prisla zprava, je treba ji obslouzit
-            //v promenne status je tag (status.MPI_TAG), cislo odesilatele (status.MPI_SOURCE)
-            //a pripadne cislo chyby (status.MPI_ERROR)
             switch (status.MPI_TAG)
             {
-                case MSG_WORK_SENT : //  accept work and switch to workState
+                case MSG_WORK_SENT : // accept work and switch to workState
                     MPI_Recv( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
                     fillStackFromMessage(s, t, message);
                     return WORK;
@@ -413,9 +412,9 @@ int main( int argc, char** argv )
         }
     }
 
-	Node * lastNode = new Node(NULL, RIGHT, 1);
     int nextState = WORK;
-    do{
+    do
+    {
         switch (nextState)
         {
             case WORK:
@@ -433,6 +432,7 @@ int main( int argc, char** argv )
 
 
     // TODO gather all results
+    // MPI_Finalize
 
 	printf("==============================\n");
 	printf("End: best solution found with %d steps. Moves:\n", bestCount);
