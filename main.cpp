@@ -294,7 +294,7 @@ void sendMyBestSolution(Direction * bestSolution)
 void sendNoSolutionFound() {
     int position = 0;
     if (DEBUG_STACK) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
-    send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
+    send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD );
 }
 
 
@@ -788,7 +788,7 @@ int main( int argc, char** argv )
                 MPI_Iprobe(MPI_ANY_SOURCE, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD, &flag, &status);
                 if (flag)
                 {
-                    receive(&message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD, &status); //just continue
+                    receive(&message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD, &status); //just continue
                     source++;
                 }
 
