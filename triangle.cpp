@@ -281,6 +281,10 @@ void Triangle::unpack(char* buffer)
 		{
 			MPI_Unpack(buffer, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
 			array[i][y] = number;
+            if(number == 0){
+                emptyX = i;
+                emptyY = y;
+            }
 		}
 	}
 }
