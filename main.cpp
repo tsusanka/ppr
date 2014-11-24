@@ -4,7 +4,7 @@
 #include "mpi.h"
 #include "main.h"
 
-#define DEBUG_STACK true
+#define DEBUG_STACK false
 #define DEBUG_COMM true
 
 #define CHECK_MSG_AMOUNT  100
@@ -262,7 +262,7 @@ void sendNoWork(int to)
  */
 void sendFinish()
 {
-    if (DEBUG_STACK) printf("X7: #%d: sending FINAL to all processors \n", globals.myRank);
+    if (DEBUG_COMM) printf("X7: #%d: sending FINAL to all processors \n", globals.myRank);
     int position = 0;
     for (int i = 1; i < globals.numberOfProcessors; ++i) // intentionally from 1 because of myRank = 0
     {
@@ -283,7 +283,7 @@ void sendMyBestSolution(Direction * bestSolution)
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     }
     int a = -1;
-    if (DEBUG_STACK) printf("X8: #%d: I'm sending my best solution to #0. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X8: #%d: I'm sending my best solution to #0. \n", globals.myRank);
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
 }
@@ -291,7 +291,7 @@ void sendMyBestSolution(Direction * bestSolution)
 
 void sendNoSolutionFound() {
     int position = 0;
-    if (DEBUG_STACK) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
+    if (DEBUG_COMM) printf("X9: #%d: I'm sending no solution to #0. \n", globals.myRank);
     send(  NULL, position, MPI_CHAR, 0, MSG_FINISH_WITHOUT_SOLUTION, MPI_COMM_WORLD );
 }
 
@@ -307,7 +307,7 @@ Direction * unpackBestSolution(char * message, int* size)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
-        if( DEBUG_STACK ){
+        if( DEBUG_COMM ){
             printf("X41: #%d: unpackBestSolution> DIRECTION recieved:", globals.myRank);
             printDirectionSymbol(direction);
             printf("\n");
@@ -449,7 +449,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 			}
 			t->move( t->oppositeDirection(n->direction) ); // revert last move
 			// todo revert parent
-			continue;
+			continu;
 		}
 
 		if( n->steps < globals.bestCount )
@@ -766,13 +766,13 @@ int main( int argc, char** argv )
                     if (message != NULL)
                     {
                         tempBestSolution = unpackBestSolution(message, &size);
-                        if (DEBUG_STACK) printf("X43: #%d: solution received with %d size\n", globals.myRank, size);
+                        if (DEBUG_COMM) printf("X43: #%d: solution received with %d size\n", globals.myRank, size);
                         if (size <= globals.bestCount)
                         {
                             delete bestSolution;
                             globals.bestCount = size;
                             bestSolution = tempBestSolution;
-                            if (DEBUG_STACK) printf("X35: #%d: Found better solution \n", globals.myRank);
+                            if (DEBUG_COMM) printf("X35: #%d: Found better solution \n", globals.myRank);
                         }
                         else
                         {
