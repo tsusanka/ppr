@@ -218,7 +218,9 @@ int workState( Stack * s, int toInitialSend, Triangle * t, int myRank, int * bes
                             *solutionFound = 0;
                         }
                         break;
-                    default : printf("neznamy typ zpravy!\n"); break;
+                    default:
+                        printf("neznamy typ zpravy!\n");
+                        break;
               }
             }
         }
@@ -374,8 +376,8 @@ int idleState(Stack * s, Triangle * t, int myRank, int numberOfProcessor)
 // called only when myRank set to 0
 int tokenState(Stack * s, Triangle * t, int numberOfProcessors)
 {
-    // send token to next processor and wait for reply
-    //             MPI_Send( (void*) NULL, position, MPI_CHAR, dest , MSG_WORK_REQUEST, MPI_COMM_WORLD );
+    int flag;
+    MPI_Status status;
     sendWhiteToken(0, numberOfProcessors);
     while(true)
     {
