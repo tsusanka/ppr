@@ -102,7 +102,7 @@ int receive(void *buf, int count, MPI_Datatype datatype, int source, int tag, MP
     return result;
 }
 
-void doMagicREMOVEORDIE(Direction dir)
+void printDirectionSymbol(Direction dir)
 {
     switch (dir)
     {
@@ -143,7 +143,7 @@ void copySolution( Direction * where, Node * from )
 
 	do
 	{
-        doMagicREMOVEORDIE(node->direction);
+        printDirectionSymbol(node->direction);
 		where[i++] = node->direction;
 		node = node->prevNode;
 	}
@@ -176,6 +176,8 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
+        printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
+        printDirectionSymbol(direction);
         if( direction == NONE )
         {
             break;
@@ -183,7 +185,7 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         int result = t->move ( direction );
         if( result == -1 )
         {
-            printf("X5: fillStackFromMessage>Invalid MOVE recieved:%d",number);
+            printf("X5: #%d: fillStackFromMessage>Invalid MOVE recieved:%d", globals.myRank, number);
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
