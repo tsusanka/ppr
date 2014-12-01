@@ -226,6 +226,7 @@ void sendWork(int to, Node * lastNode )
     }
     while( result[ri++] != NONE);
     send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
+    delete [] buffer;
 }
 
 void broadcastBestCount(int count) {
@@ -239,6 +240,7 @@ void broadcastBestCount(int count) {
         }
         send (buffer, position, MPI_PACKED, i, MSG_NEW_BEST_SOLUTION, MPI_COMM_WORLD);
     }
+    delete [] buffer;
 }
 
 void sendBlackToken() {
@@ -670,6 +672,7 @@ int main( int argc, char** argv )
 		{
 			send( (void*) message, position, MPI_PACKED, destination, MSG_SHUFFLED_TRIANGLE, MPI_COMM_WORLD );
 		}
+        delete [] message;
 	}
 	else
 	{
@@ -808,13 +811,14 @@ int main( int argc, char** argv )
 	{
 		t->printDirectionSymbol(bestSolution[i]);
 	}
-	delete [] bestSolution;
-	printf("\n");
-
-	delete s;
-	delete t;
+    printf("\n");
 
     MPI_Finalize();
+
+	delete [] bestSolution;
+    delete s;
+    delete t;
+    delete [] globals.nullBuffer;
 
 	return 0;
 }
