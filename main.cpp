@@ -359,6 +359,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
     int newCount = 0;
     char * buffer;
 
+    int shouldFinish = 0;
     // ======== DEPTH-FIRST SEARCH ==========//
 
     Node * lastNode = new Node(NULL, RIGHT, 1);
@@ -392,6 +393,8 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
                         break;
                     case MSG_WORK_NOWORK:
                         break;
+                    case MSG_FINISH:
+                        shouldFinish = 1;
                     default:
                         printf("X13: #%d: neznamy typ zpravy! tag %d\n", globals.myRank, status.MPI_TAG);
                         break;
@@ -491,7 +494,11 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 		}
 
 	}
-    delete lastNode;
+    delete lastNode
+    if (shouldFinish)
+    {
+       return FINISH;
+    }
     return IDLE;
 }
 
