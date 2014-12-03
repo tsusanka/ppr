@@ -155,6 +155,7 @@ void copySolution( Direction * where, Node * from )
 		node = node->prevNode;
 	}
 	while (node != NULL);
+	assert(i > 0);
     printf("\n");
 }
 
@@ -279,6 +280,8 @@ void sendMyBestSolution(Direction * bestSolution)
 {
     char * buffer = new char[LENGTH];
     int position = 0;
+    assert(globals.bestCount > 0);
+    assert(globals.myRank > 0);
     for(int i = 0; i < globals.bestCount; i++)
     {
         int a = (int) bestSolution[i];
@@ -654,12 +657,12 @@ int main( int argc, char** argv )
 		printf("X28: #0: Default triangle:\n");
 		t->print();
 
-        for( int i = 0; i < q; i++ )
-		{
-			t->randomStep();
-		}
+//        for( int i = 0; i < q; i++ )
+//		{
+//			t->randomStep();
+//		}
 //        t->move(BOTTOM_RIGHT);
-//        t->move(BOTTOM_RIGHT);
+        t->move(BOTTOM_RIGHT);
 //        t->move(LEFT);
 
 		printf("X29: #0: Triangle after shuffle:\n");
