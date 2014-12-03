@@ -494,7 +494,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 		}
 
 	}
-    delete lastNode
+    delete lastNode;
     if (shouldFinish)
     {
        return FINISH;
