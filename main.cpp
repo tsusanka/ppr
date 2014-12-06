@@ -228,6 +228,7 @@ void sendWork(int to, Node * lastNode )
     while( result[ri++] != NONE);
     send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
     delete [] buffer;
+    delete [] result;
 }
 
 void broadcastBestCount(int count) {
@@ -291,6 +292,7 @@ void sendMyBestSolution(Direction * bestSolution)
     if (DEBUG_COMM) printf("X08: #%d: I'm sending my best solution to #0. \n", globals.myRank);
     MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     send( (void*) buffer, position, MPI_PACKED, 0, MSG_FINISH_WITH_SOLUTION, MPI_COMM_WORLD );
+    delete [] buffer;
 }
 
 
@@ -364,7 +366,7 @@ int workState( Stack * s, Triangle * t, Direction * bestSolution)
 
     Node * lastNode = new Node(NULL, RIGHT, 1);
     while( s->getSize() > 0 )
-	{   
+	{
         if ((checkMsgCounter++ % CHECK_MSG_AMOUNT) == 0)
         {
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
@@ -596,7 +598,7 @@ int tokenState()
             }
         }
     }
-
+    delete [] buffer;
 }
 
 int main( int argc, char** argv )
