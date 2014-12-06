@@ -180,18 +180,10 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     Direction direction;
     Node * lastNode = NULL;
     int i = 1;
-    if (DEBUG_COMM) printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
-    t->print();
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
-        if (DEBUG_COMM)
-        {
-            printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
-            printDirectionSymbol(direction);
-            printf("\n");
-        }
         if( direction == NONE ) {
             break;
         }
@@ -201,10 +193,6 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
             printf("X43: #%d: fillStackFromMessage> moving: ", globals.myRank);
             printDirectionSymbol(direction);
             printf("\n");
-        }
-        if( result == -1 )
-        {
-            printf("X05: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
