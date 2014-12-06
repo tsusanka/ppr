@@ -5,7 +5,7 @@
 #include "main.h"
 
 #define DEBUG_STACK false
-#define DEBUG_COMM true
+#define DEBUG_COMM false 
 
 #define CHECK_MSG_AMOUNT  100
 #define LENGTH 1000
