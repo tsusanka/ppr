@@ -726,7 +726,7 @@ int main( int argc, char** argv )
         {
             case WORK:
                 if (DEBUG_COMM) printf("X31: #%d: I am changing my state to WORK. \n", globals.myRank);
-                nextState = workState(s, toInitialSend, t, bestSolution);
+                nextState = workState(s, t, bestSolution);
                 break;
             case IDLE:
                 if (DEBUG_COMM) printf("X32: #%d: I am changing my state to IDLE. \n", globals.myRank);
