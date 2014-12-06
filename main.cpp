@@ -180,22 +180,28 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     Direction direction;
     Node * lastNode = NULL;
     int i = 1;
-    printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
+    if (DEBUG_COMM) printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
     t->print();
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
-        printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
-        printDirectionSymbol(direction);
-        printf("\n");
+        if (DEBUG_COMM)
+        {
+            printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
+            printDirectionSymbol(direction);
+            printf("\n");
+        }
         if( direction == NONE ) {
             break;
         }
         int result = t->move ( direction );
-        printf("X43: #%d: fillStackFromMessage> moving: ", globals.myRank);
-        printDirectionSymbol(direction);
-        printf("\n");
+        if (DEBUG_COMM)
+        {
+            printf("X43: #%d: fillStackFromMessage> moving: ", globals.myRank);
+            printDirectionSymbol(direction);
+            printf("\n");
+        }
         if( result == -1 )
         {
             printf("X05: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
@@ -205,9 +211,12 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     }
     if (DEBUG_COMM) printf("X6: #%d: I've filled my stack. \n", globals.myRank);
     t->move( t->oppositeDirection(lastNode->direction) ); //revert the last move, because it will be done after it is popped from the stack
-    printf("X42: #%d: fillStackFromMessage> revert move", globals.myRank);
-    printDirectionSymbol(lastNode->direction);
-    printf("\n");
+    if (DEBUG_COMM)
+    {
+        printf("X42: #%d: fillStackFromMessage> revert move", globals.myRank);
+        printDirectionSymbol(lastNode->direction);
+        printf("\n");
+    }
     s->push(lastNode);
 }
 
@@ -715,7 +724,7 @@ int main( int argc, char** argv )
     else // sends first ever work
     {
         nextState = IDLE;
-        printf("X38: #%d: I'm waiting for initial work \n", globals.myRank);
+        if (DEBUG_COMM) printf("X38: #%d: I'm waiting for initial work \n", globals.myRank);
     }
 
   
