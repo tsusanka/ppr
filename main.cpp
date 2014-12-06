@@ -659,13 +659,10 @@ int main( int argc, char** argv )
 		printf("X28: #0: Default triangle:\n");
 		t->print();
 
-//        for( int i = 0; i < q; i++ )
-//		{
-//			t->randomStep();
-//		}
-//        t->move(BOTTOM_RIGHT);
-        t->move(BOTTOM_RIGHT);
-//        t->move(LEFT);
+		for( int i = 0; i < q; i++ )
+		{
+			t->randomStep();
+		}
 
 		printf("X29: #0: Triangle after shuffle:\n");
 		t->print();
