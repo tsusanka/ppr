@@ -350,7 +350,7 @@ void receiveBestSolution(char * buffer)
 /**
  * Deals with all the work
  */
-int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolution)
+int workState( Stack * s, Triangle * t, Direction * bestSolution)
 {
     int checkMsgCounter = 0;
     int flag;
@@ -462,14 +462,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 
 		if( n->steps < globals.bestCount )
 		{
-            if( toInitialSend > 0 )
-            {
-                if (DEBUG_COMM) printf("X21: #%d: I am sending INITIAL send work to #%d \n", globals.myRank, toInitialSend);
-                sendWork(toInitialSend, n);
-                toInitialSend--;
-                t->move( t->oppositeDirection(n->direction) ); // revert last move
-            }
-            else if( sendWorkTo != -1)
+            if( sendWorkTo != -1)
             {
                 if (DEBUG_COMM) printf("X22: #%d: I am sending usual work to #%d \n", globals.myRank, sendWorkTo);
                 sendWork(sendWorkTo, n);
@@ -709,11 +702,10 @@ int main( int argc, char** argv )
 
 	Stack * s = new Stack;
 
-    int toInitialSend = 0;
+      Direction * bestSolution = new Direction[globals.bestCount];
+    int nextState = WORK;
     if( globals.myRank == 0 )
     {
-        toInitialSend = globals.numberOfProcessors - 1;
-        // first nodes inserted to stack
         for ( int dir = TOP_LEFT; dir <= BOTTOM_RIGHT; dir++ )
         {
             Direction direction = Direction(dir);
@@ -723,20 +715,11 @@ int main( int argc, char** argv )
     }
     else // sends first ever work
     {
+        nextState = IDLE;
         printf("X38: #%d: I'm waiting for initial work \n", globals.myRank);
-        int flag = 0;
-        char message[LENGTH]; // TODO dynamic?
-        while (!flag)
-        {
-            MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
-        }
-        printf("X37: #%d: Probe request flag true, recieving \n", globals.myRank);
-        receive( message, LENGTH, MPI_PACKED, 0, MSG_WORK_SENT, MPI_COMM_WORLD, &status );
-        fillStackFromMessage(s, t, message);
     }
 
-    Direction * bestSolution = new Direction[globals.bestCount];
-    int nextState = WORK;
+  
     do
     {
         switch (nextState)
