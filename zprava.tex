@@ -1,0 +1,173 @@
+\documentclass[12pt]{article}
+\usepackage{epsf,epic,eepic,eepicemu}
+%\documentstyle[epsf,epic,eepic,eepicemu]{article}
+\usepackage[utf8]{inputenc} 
+
+\begin{document}
+%\oddsidemargin=-5mm \evensidemargin=-5mm \marginparwidth=.08in
+%\marginparsep=.01in \marginparpush=5pt \topmargin=-15mm
+%\headheight=12pt \headsep=25pt \footheight=12pt \footskip=30pt
+%\textheight=25cm \textwidth=17cm \columnsep=2mm \columnseprule=1pt
+%\parindent=15pt\parskip=2pt
+
+\begin{center}
+\bf Semestralní projekt MI-PAR 2013/2014:\\[5mm]
+    Paralelní algoritmus pro řešení problému Permutace číselných koleček\\[5mm]
+       Ondřej Paška\\
+       Tomáš Sušánka\\[2mm]
+magisterské studijum, FIT ČVUT, Kolejní 550/2, 160 00 Praha 6\\[2mm]
+\today
+\end{center}
+
+\section{Definice problému a popis sekvenčního algoritmu}
+
+\subsection{Vstupní data}
+
+\begin{itemize}
+\item n \(=\) délka rovnostranného trojúhelníka,\(n >= 5\)
+\item q \(=\) přirozené číslo, \(n^2 > q\)
+\item X0 \(=\) počáteční konfigurace zkonstruovaná zpětným provedením q náhodných tah; z cílové konfigurace. Platí \(q >= d(X0)\). 
+\end{itemize}
+
+\subsection{Pravidla a cíl hry}
+
+Herní deska má tvar rovnostranného trojúhelníka o délce strany n, kde v i-tem řádku je i políček, ležících na průsečících úseček, rovnoběžných se stranami trojúhelníka. V těchto políčkách jsou podle určité permutace rozmístěna kolečka s čísly 1,…,M-1, kde M=n(n+1)/2. Jedno políčko zůstává volné, viz příklad na obrázku vlevo.
+
+Tomuto rozmístění koleček budeme říkat počáteční konfigurace X0. Jeden tah je přesun kolečka na sousední volné políčko ve směru některé úsečky. Cílem hry je použitím minimálního počtu tahů převést počáteční konfiguraci X0 do cílové konfigurace C, ve které jsou kolečka seřazena vzestupně po řádcích tak, že políčko na horním vrcholu trojúhelníkové desky je volné, viz obrázek vpravo. Úloha má vždy řešení.
+
+Definice:
+
+Je-li X konfigurace rozmístění všech koleček na herní desce, pak
+t(X) je počet doposud provedených tahů, kterými jsme převedli počáteční konfiguraci X0 do konfigurace X.
+d(X) je spodní mez počtu tahů, kterými se lze dostat z konfigurace X do cílové konfigurace C. Tato spodní mez je rovna součtu vzdáleností koleček od jejich cílových políček. Vzdálenost 2 políček v této síti se počítá takto: Jsou-li obě políčka na úsečce rovnoběžné se stranou trojúhelníka, pak je vzdálenost rovna jejich lineární vzdálenosti po této úsečce. V opačném případě tvoří políčka vrcholy kosodélníka a vzdálenost se rovná součtu délek jeho dvou stran. Spodní mez počtu tahů nejlepšího možného řešení je tedy d(X0).
+
+Generování počátečního stavu:
+
+X0 vygenerujeme nejprve q náhodně provedenými zpětnými tahy z cílové konfigurace C.
+
+\subsection{Výstup algoritmu}
+
+Výpis nejkratší posloupnosti tahů vedoucí z počáteční konfigurace do cílové konfigurace.
+
+\subsection{Sekvenční algoritmus}
+
+Sekvenční algoritmus je typu BB-DFS s neomezenou hloubkou stromu konfiguraci. Přípustný stav je cesta z počáteční do cílové konfigurace C. Cena, která se minimalizuje, je počet tahů takové cesty.
+
+Horní mez počtu tahů je q.
+
+Dolní mez je d(X0).
+
+\subsection{Paralelní algoritmus}
+
+Paralelní algoritmus je typu L-PBB-DFS-D.
+
+Popište problém, který váš program řeší. Jako výchozí použijte text
+zadání, který rozšiřte o přesné vymezení všech odchylek, které jste
+vùèi zadání bìhem implementace provedli (např.  úpravy heuristické
+funkce, organizace zásobníku, apod.). Zmiòte i případnì i takové
+prvky algoritmu, které v zadání nebyly specifikovány, ale které se
+ukázaly jako dùležité.  Dále popište vstupy a výstupy algoritmu
+(formát vstupních a výstupních dat). Uveïte tabulku nameřených èasù
+sekvenèního algoritmu pro rùznì velká data.
+
+\section{Popis paralelního algoritmu a jeho implementace v MPI}
+
+Popište paralelní algoritmus, opìt vyjdìte ze zadání a přesnì
+vymezte odchylky, zvláštì u algoritmu pro vyvažování zátìže, hledání
+dárce, ci ukonèení výpoètu.  Popište a vysvìtlete strukturu
+celkového paralelního algoritmu na úrovni procesù v MPI a strukturu
+kódu jednotlivých procesù. Např. jak je naimplementována smyèka pro
+èinnost procesù v aktivním stavu i v stavu neèinnosti. Jaké jste
+zvolili konstanty a parametry pro škálování algoritmu. Struktura a
+sémantika příkazové řádky pro spouštìní programu.
+
+\section{Namìřené výsledky a vyhodnocení}
+
+\begin{enumerate}
+\item Zvolte tři instance problému s takovou velikostí vstupních dat, pro které má
+sekvenèní algoritmus èasovou složitost kolem 5, 10 a 15 minut. Pro
+meření èas potřebný na ètení dat z disku a uložení na disk
+neuvažujte a zakomentujte ladící tisky, logy, zprávy a výstupy.
+\item Mìřte paralelní èas při použití $i=2,\cdot,32$ procesorù na sítích Ethernet a InfiniBand.
+%\item Pri mereni kazde instance problemu na dany pocet procesoru spoctete pro vas algoritmus dynamicke delby prace celkovy pocet odeslanych zadosti o praci, prumer na 1 procesor a jejich uspesnost.
+%\item Mereni pro dany pocet procesoru a instanci problemu provedte 3x a pouzijte prumerne hodnoty.
+\item Z namìřených dat sestavte grafy zrychlení $S(n,p)$. Zjistìte, zda a za jakych podmínek
+došlo k superlineárnímu zrychlení a pokuste se je zdùvodnit.
+\item Vyhodnoïte komunikaèní složitost dynamického vyvažování zátìže a posuïte
+vhodnost vámi implementovaného algoritmu pro hledání dárce a dìlení
+zásobníku pri řešení vašeho problému. Posuïte efektivnost a
+škálovatelnost algoritmu. Popište nedostatky vaší implementace a
+navrhnìte zlepšení.
+\item Empiricky stanovte
+granularitu vaší implementace, tj., stupeò paralelismu pro danou
+velikost řešeného problému. Stanovte kritéria pro stanovení mezí, za
+kterými již není uèinné rozkládat výpoèet na menší procesy, protože
+by komunikaèní náklady prevážily urychlení paralelním výpoètem.
+
+\end{enumerate}
+
+\section{Závěr}
+
+Celkové zhodnocení semestrální práce a zkušenosti získaných bìhem
+semestru.
+
+\section{Literatura}
+
+\appendix
+
+\section{Návod pro vkládání grafù a obrázkù do Latexu}
+
+Nejjednodušší zpùsob vytvoření obrázku je použít vektorový grafický
+editor (např. xfig nebo jfig), ze kterého lze exportovat buï
+\begin{itemize}
+\item postscript formáty (ps nebo eps formát) nebo
+\item latex formáty (v pořadí prostý latex, latex s macry epic, eepic, eepicemu). Uvedené pořadí odpovídá rùstu
+komplikovanosti obrázkù který formát podporuje (prostá latex macra
+umožnují pouze jednoduché, epic makra nìco mezi, je třeba
+vyzkoušet).
+
+\end{itemize}
+Následující příklady platí pro všechny případy.
+
+Obrázek v postscriptu, vycentrovaný a na celou šířku stránky, s
+popisem a èíslem. Všimnete si, jak řídit velikost obrazku.
+%\begin{figure}[ht]
+%\epsfysize=3cm \centerline{\epsfbox{VasObrazek.ps}} \caption{Popis
+%vašeho obrazku} \label{labelvasehoobrazku}
+%\end{figure}
+
+%Obrázek pouze vložený mezi řádky textu, bez popisu a èíslování.\\
+%\epsfxsize=1cm
+%\rule{0pt}{0pt}\hfill\epsfbox{VasObrazek.ps}\hfill\rule{0pt}{0pt}
+
+Latexovské obrázky maji přípony *.latex, *.epic, *.eepic, a
+*.eepicemu, respective.
+%\begin{figure}[ht]
+%\begin{center}
+%\input VasObrazek.latex
+%\end{center}
+%\caption{Popis vašeho obrázku} \label{l1}
+%\end{figure}
+%Vypuštením závorek {\tt figure} dostanete opìt pouze rámeèek v textu
+bez èísla a popisu.
+
+Takhle jednoduše mùžete poskládat obrázky vedle sebe.
+%\begin{center}
+%\setlength{\unitlength}{0.1mm}\input VasObrazek.epic
+%\hglue 5mm
+%\setlength{\unitlength}{0.15mm}\input VasObrazek.eepic
+%\hglue 5mm
+%\setlength{\unitlength}{0.2mm}\input VasObrazek.eepicemu
+%\end{center}
+%řídit velikost latexovskych obrázkù lze příkazem
+%\begin{verbatim}
+%\setlength{\unitlength}{0.1mm}
+%\end{verbatim}
+které mìní měřítko rastru obrázku, Tyto příkazy je ale současně
+nutné vyhodit ze souboru, který xfig vygeneroval.
+
+Pro vytváření grafu lze použít program gnuplot, který umí generovat
+postscriptovy soubor, ktery vložíte do Latexu výše uvedeným
+zpùsobem.
+
+\end{document}
