@@ -36,6 +36,7 @@ struct Globals
     int myRank;
     int numberOfProcessors;
     char * nullBuffer;
+    char * originalTriangle;
 };
 
 Globals globals;
@@ -182,6 +183,9 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     int i = 1;
     if (DEBUG_COMM) printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
     t->print();
+    t->unpack(globals.originalTriangle);
+    t->print();
+
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
@@ -741,10 +745,10 @@ int main( int argc, char** argv )
 
 		t = new Triangle(n);
 
-		char message[LENGTH]; // todo: dynamic length?
+		char * message = new char[LENGTH];
 		receive( message, LENGTH, MPI_PACKED, 0, MSG_SHUFFLED_TRIANGLE, MPI_COMM_WORLD, &status );
 		t->unpack(message);
-
+        globals.originalTriangle = message;
         if (DEBUG_COMM)
         {
             printf("X30: #%d: triangle:", globals.myRank);
