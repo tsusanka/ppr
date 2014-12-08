@@ -360,7 +360,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
     int sendWorkTo = -1;
     int newCount = 0;
     char * buffer;
-
+    int stackExpanded = 0;
     int shouldFinish = 0;
     // ======== DEPTH-FIRST SEARCH ==========//
 
@@ -464,7 +464,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
 
 		if( n->steps < globals.bestCount )
 		{
-            if( toInitialSend > 0 )
+            if( toInitialSend > 0 && stackExpanded > globals.numberOfProcessors)
             {
                 if (DEBUG_COMM) printf("X21: #%d: I am sending INITIAL send work to #%d \n", globals.myRank, toInitialSend);
                 sendWork(toInitialSend, n);
@@ -486,6 +486,7 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
                     Direction direction = Direction(dir);
                     s->push( new Node(n, direction, n->steps + 1 ));
                 }
+                stackExpanded++;
             }
 		}
 		else
