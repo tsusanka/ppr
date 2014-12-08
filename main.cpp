@@ -36,7 +36,7 @@ struct Globals
     int myRank;
     int numberOfProcessors;
     char * nullBuffer;
-    bool firstWork;
+    int firstWork;
 };
 
 Globals globals;
