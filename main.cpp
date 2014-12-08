@@ -611,6 +611,7 @@ int tokenState()
 
 int main( int argc, char** argv )
 {
+	double time1, time2;
     srand(time(NULL));
 
 	/* MPI VARIABLES */
@@ -630,6 +631,8 @@ int main( int argc, char** argv )
 	MPI_Comm_size(MPI_COMM_WORLD, &(globals.numberOfProcessors));
 
     MPI_Barrier(MPI_COMM_WORLD);
+
+	time1 = MPI_Wtime();
 
 	/* Sequential Variables */
 	Triangle * t;
@@ -824,6 +827,9 @@ int main( int argc, char** argv )
 		t->printDirectionSymbol(bestSolution[i]);
 	}
     printf("\n");
+
+    time2=MPI_Wtime();
+    printf("Finished in %f.\n", time2-time1);
 
     MPI_Finalize();
 
