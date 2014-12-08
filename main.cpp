@@ -628,6 +628,8 @@ int main( int argc, char** argv )
 	/* find out number of processes */
 	MPI_Comm_size(MPI_COMM_WORLD, &(globals.numberOfProcessors));
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
 	/* Sequential Variables */
 	Triangle * t;
 	unsigned int microseconds = 100000;
