@@ -716,6 +716,7 @@ int main( int argc, char** argv )
 
     int nextState = WORK;
     int toInitialSend = 0;
+    int loop = 1;
     if( globals.myRank == 0 )
     {
         toInitialSend = globals.numberOfProcessors - 1;
@@ -733,7 +734,7 @@ int main( int argc, char** argv )
         int flag = 0;
         char message[LENGTH]; // TODO dynamic?
 
-        outter:while(true)
+        outter:while(loop)
         {
             position = 0;
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
@@ -751,23 +752,30 @@ int main( int argc, char** argv )
                 {
                     case MSG_WORK_SENT : // accept work and switch to workState
                         fillStackFromMessage(s, t, message);
-                        break outter;
+                        loop = 0; // like a break because ondrej is a sucker
+                        break;
                     case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == globals.numberOfProcessors-1 and myrank == 0 sent white token
+                        loop = 0;
                         break;
                     case MSG_FINISH : // finish, switch to finish state
                         nextState = FINISH;
-                        break outter;
+                        loop = 0;
+                        break;
                     case MSG_TOKEN_BLACK : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
                         sendBlackToken();
-                        break outter;
+                        loop = 0;
+                        break;
                     case MSG_TOKEN_WHITE:
                         sendWhiteToken();
-                        break outter;
+                        loop = 0;
+                        break;
                     case MSG_NEW_BEST_SOLUTION:
                         receiveBestSolution(message);
-                        break outter;
+                        loop = 0;
+                        break;
                     case MSG_WORK_REQUEST:
                         sendNoWork(status.MPI_SOURCE);
+                        loop = 0;
                         break;
                     default : printf("X37: #%d: neznamy typ zpravy, tag %d!\n", globals.myRank, status.MPI_TAG); break;
                 }
