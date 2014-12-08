@@ -710,10 +710,11 @@ int main( int argc, char** argv )
             t->print();
             printf("\n");
         }
-	}
+    }
 
-	Stack * s = new Stack;
+    Stack * s = new Stack;
 
+    int nextState = WORK;
     int toInitialSend = 0;
     if( globals.myRank == 0 )
     {
@@ -731,17 +732,50 @@ int main( int argc, char** argv )
         printf("X38: #%d: I'm waiting for initial work \n", globals.myRank);
         int flag = 0;
         char message[LENGTH]; // TODO dynamic?
-        while (!flag)
+
+        outter:while(true)
         {
-            MPI_Iprobe(0, MSG_WORK_SENT, MPI_COMM_WORLD, &flag, &status);
+            position = 0;
+            MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
+            if (flag)
+            {
+                if (status.MPI_TAG == MSG_WORK_SENT)
+                {
+                    receive( message, LENGTH, MPI_PACKED, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+                }
+                else
+                {
+                    receive( message, LENGTH, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status );
+                }
+                switch (status.MPI_TAG)
+                {
+                    case MSG_WORK_SENT : // accept work and switch to workState
+                        fillStackFromMessage(s, t, message);
+                        break outter;
+                    case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == globals.numberOfProcessors-1 and myrank == 0 sent white token
+                        break;
+                    case MSG_FINISH : // finish, switch to finish state
+                        nextState = FINISH;
+                        break outter;
+                    case MSG_TOKEN_BLACK : // if token is black send black else send white token to cpu+1, if myrank==0 and token is white send finish and switch to finish state
+                        sendBlackToken();
+                        break outter;
+                    case MSG_TOKEN_WHITE:
+                        sendWhiteToken();
+                        break outter;
+                    case MSG_NEW_BEST_SOLUTION:
+                        receiveBestSolution(message);
+                        break outter;
+                    case MSG_WORK_REQUEST:
+                        sendNoWork(status.MPI_SOURCE);
+                        break;
+                    default : printf("X37: #%d: neznamy typ zpravy, tag %d!\n", globals.myRank, status.MPI_TAG); break;
+                }
+            }
         }
-        printf("X37: #%d: Probe request flag true, recieving \n", globals.myRank);
-        receive( message, LENGTH, MPI_PACKED, 0, MSG_WORK_SENT, MPI_COMM_WORLD, &status );
-        fillStackFromMessage(s, t, message);
     }
 
     Direction * bestSolution = new Direction[globals.bestCount];
-    int nextState = WORK;
     do
     {
         switch (nextState)
