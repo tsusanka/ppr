@@ -600,26 +600,29 @@ int tokenState()
 
 int main( int argc, char** argv )
 {
-	double time1, time2;
-    srand(time(NULL));
+    double time1, time2;
 
-	/* MPI VARIABLES */
-	int tag = 9999;
+    /* start up MPI */
+    MPI_Init(&argc, &argv);
+
+    /* find out process rank */
+    MPI_Comm_rank(MPI_COMM_WORLD, &(globals.myRank));
+
+    /* find out number of processes */
+    MPI_Comm_size(MPI_COMM_WORLD, &(globals.numberOfProcessors));
+
+    MPI_Barrier(MPI_COMM_WORLD); // because of Wtime
+
+    time1 = MPI_Wtime();
+
+    /* MPI VARIABLES */
+    int tag = 9999;
     globals.nullBuffer = new char[1];
     globals.nullBuffer[0] = -1;
-	MPI_Status status;
-	int position = 0;
+    MPI_Status status;
+    int position = 0;
 
-	/* start up MPI */
-	MPI_Init(&argc, &argv);
-
-	/* find out process rank */
-	MPI_Comm_rank(MPI_COMM_WORLD, &(globals.myRank));
-
-	/* find out number of processes */
-	MPI_Comm_size(MPI_COMM_WORLD, &(globals.numberOfProcessors));
-
-	time1 = MPI_Wtime();
+    srand(time(NULL));
 
 	/* Sequential Variables */
 	Triangle * t;
@@ -806,6 +809,8 @@ int main( int argc, char** argv )
 		t->printDirectionSymbol(bestSolution[i]);
 	}
     printf("\n");
+
+    MPI_Barrier (MPI_COMM_WORLD);
 
     time2=MPI_Wtime();
     printf("Finished in %f.\n", time2-time1);
