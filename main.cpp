@@ -181,7 +181,6 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     Direction direction;
     Node * lastNode = NULL;
     int i = 1;
-    globals.firstWork = 0;
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
@@ -358,10 +357,11 @@ int workState( Stack * s, Triangle * t, Direction * bestSolution)
     MPI_Status status;
     int initialWork =  0;
     int sendWorkTo = 1;
-    if( globals.myRank == 0 ){
+    if( globals.firstWork && globals.myRank == 0 ){
         initialWork = globals.numberOfProcessors - 1;
         sendWorkTo = initialWork;
     }
+    globals.firstWork = 0;
     int newCount = 0;
     char * buffer;
 
