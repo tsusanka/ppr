@@ -810,8 +810,6 @@ int main( int argc, char** argv )
 	}
     printf("\n");
 
-    MPI_Barrier (MPI_COMM_WORLD);
-
     time2=MPI_Wtime();
     printf("Finished in %f.\n", time2-time1);
 
