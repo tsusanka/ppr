@@ -663,13 +663,43 @@ int main( int argc, char** argv )
 		t->print();
 
         printf("Shuffle steps: ");
-		for( int i = 0; i < q; i++ )
-		{
-			t->randomStep();
-		}
+	//	for( int i = 0; i < q; i++ )
+	//	{
+	//		t->randomStep();
+	//	}
+	t->move(BOTTOM_RIGHT);
+	t->printDirectionSymbol(BOTTOM_RIGHT);
+	t->move(BOTTOM_RIGHT);
+	t->printDirectionSymbol(BOTTOM_RIGHT);
+	t->move(LEFT);
+	t->printDirectionSymbol(LEFT);
+	t->move(BOTTOM_LEFT);
+	t->printDirectionSymbol(BOTTOM_LEFT);
+	t->move(BOTTOM_LEFT);
+	t->printDirectionSymbol(BOTTOM_LEFT);
+	t->move(BOTTOM_LEFT);
+	t->printDirectionSymbol(BOTTOM_LEFT);
+	t->move(BOTTOM_LEFT);
+	t->printDirectionSymbol(BOTTOM_LEFT);
+	t->move(TOP_RIGHT);
+	t->printDirectionSymbol(TOP_RIGHT);
+	t->move(RIGHT);
+	t->printDirectionSymbol(RIGHT);
+	t->move(RIGHT);
+	t->printDirectionSymbol(RIGHT);
+	t->move(RIGHT);
+	t->printDirectionSymbol(RIGHT);
+	t->move(TOP_LEFT);
+	t->printDirectionSymbol(TOP_LEFT);
+	t->move(TOP_LEFT);
+	t->printDirectionSymbol(TOP_LEFT);
+	t->move(BOTTOM_LEFT);
+	t->printDirectionSymbol(BOTTOM_LEFT);
+	t->move(BOTTOM_RIGHT);
+	t->printDirectionSymbol(BOTTOM_RIGHT);
         printf("\n");
 
-		printf("X29: #0: Triangle after shuffle:\n");
+	printf("X29: #0: Triangle after shuffle:\n");
 		t->print();
 		printf("==============================\n");
 
