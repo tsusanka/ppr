@@ -109,6 +109,7 @@ int Triangle::getDistanceX()
  */
 void Triangle::randomStep()
 {
+	printf("Shuffle steps: ");
 	Direction test;
 	int tries = 0;
 	do
@@ -120,8 +121,10 @@ void Triangle::randomStep()
 			printf("Something is wrong, no direction seems valid");
 			return;
 		}
+		printDirectionSymbol(test);
 	}
 	while( move(test) == INVALID_MOVE );
+	printf("\n");
 }
 
 /*
