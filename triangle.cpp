@@ -122,6 +122,7 @@ void Triangle::randomStep()
 		}
 	}
 	while( move(test) == INVALID_MOVE );
+	printDirectionSymbol(test);
 }
 
 /*

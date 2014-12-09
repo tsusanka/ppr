@@ -182,23 +182,31 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
     Node * lastNode = NULL;
     int i = 1;
     if (DEBUG_COMM) printf("X45: #%d: fillStackFromMessage> triangle:", globals.myRank);
+    printf("before originalTriangle:");
     t->print();
+    printf("after originalTriangle:");
     t->unpack(globals.originalTriangle);
     t->print();
-
+    Direction pole[LENGTH];
+    int poleLength = 0;
     while(true)
     {
         MPI_Unpack(message, LENGTH, &position, &number, 1, MPI_INT, MPI_COMM_WORLD);
         direction = (Direction) number;
+        if( direction == NONE ) {
+            break;
+        }
+        pole[poleLength++] = direction;
+    }
+    for(int i = poleLength-1; i >= 0; i--){
+        direction = pole[i];   
         if (DEBUG_COMM)
         {
             printf("X41: #%d: fillStackFromMessage> MOVE recieved:", globals.myRank);
             printDirectionSymbol(direction);
             printf("\n");
         }
-        if( direction == NONE ) {
-            break;
-        }
+    
         int result = t->move ( direction );
         if (DEBUG_COMM)
         {
@@ -208,7 +216,10 @@ void fillStackFromMessage( Stack * s, Triangle * t, char * message )
         }
         if( result == -1 )
         {
+            printf("invalid move :(. triangle:");
+            t->print();
             printf("X05: #%d: fillStackFromMessage>Invalid MOVE recieved:%d\n", globals.myRank, number);
+            MPI_Finalize();
         }
         Node * n = new Node(lastNode, direction, i++);
         lastNode = n;
@@ -235,10 +246,12 @@ void sendWork(int to, Node * lastNode )
     int ri = 0;
     do
     {
+        printDirectionSymbol(result[ri]);
         int a = (int) result[ri];
         MPI_Pack(&a, 1, MPI_INT, buffer, LENGTH, &position, MPI_COMM_WORLD);
     }
     while( result[ri++] != NONE);
+    printf("\n");
     send( (void*) buffer, position, MPI_PACKED, to, MSG_WORK_SENT, MPI_COMM_WORLD );
     delete [] buffer;
     delete [] result;
@@ -486,6 +499,8 @@ int workState( Stack * s, int toInitialSend, Triangle * t, Direction * bestSolut
             }
             else if( sendWorkTo != -1)
             {
+                printf("t->print sendWorkTo:\n");
+                t->print();
                 if (DEBUG_COMM) printf("X22: #%d: I am sending usual work to #%d \n", globals.myRank, sendWorkTo);
                 sendWork(sendWorkTo, n);
                 sendWorkTo = -1;
@@ -559,6 +574,7 @@ int idleState(Stack * s, Triangle * t)
             switch (status.MPI_TAG)
             {
                 case MSG_WORK_SENT : // accept work and switch to workState
+                    printf("calling fillStackFromMessage from idle state\n");
                     fillStackFromMessage(s, t, message);
                     return WORK;
                 case MSG_WORK_NOWORK : // ask some other cpu for work, or if attemps == globals.numberOfProcessors-1 and myrank == 0 sent white token
@@ -686,43 +702,41 @@ int main( int argc, char** argv )
 		t->print();
 
         printf("Shuffle steps: ");
-	//	for( int i = 0; i < q; i++ )
-	//	{
-	//		t->randomStep();
-	//	}
-	t->move(BOTTOM_RIGHT);
-	t->printDirectionSymbol(BOTTOM_RIGHT);
-	t->move(BOTTOM_RIGHT);
-	t->printDirectionSymbol(BOTTOM_RIGHT);
-	t->move(LEFT);
-	t->printDirectionSymbol(LEFT);
-	t->move(BOTTOM_LEFT);
-	t->printDirectionSymbol(BOTTOM_LEFT);
-	t->move(BOTTOM_LEFT);
-	t->printDirectionSymbol(BOTTOM_LEFT);
-	t->move(BOTTOM_LEFT);
-	t->printDirectionSymbol(BOTTOM_LEFT);
-	t->move(BOTTOM_LEFT);
-	t->printDirectionSymbol(BOTTOM_LEFT);
-	t->move(TOP_RIGHT);
-	t->printDirectionSymbol(TOP_RIGHT);
-	t->move(RIGHT);
-	t->printDirectionSymbol(RIGHT);
-	t->move(RIGHT);
-	t->printDirectionSymbol(RIGHT);
-	t->move(RIGHT);
-	t->printDirectionSymbol(RIGHT);
-	t->move(TOP_LEFT);
-	t->printDirectionSymbol(TOP_LEFT);
-	t->move(TOP_LEFT);
-	t->printDirectionSymbol(TOP_LEFT);
-	t->move(BOTTOM_LEFT);
-	t->printDirectionSymbol(BOTTOM_LEFT);
-	t->move(BOTTOM_RIGHT);
-	t->printDirectionSymbol(BOTTOM_RIGHT);
+    	//for( int i = 0; i < q; i++ )
+    	//{
+    	//	t->randomStep();
+    	//}
+        t->move(BOTTOM_LEFT);
+    t->printDirectionSymbol(BOTTOM_LEFT);
+    t->move(BOTTOM_RIGHT);
+    t->printDirectionSymbol(BOTTOM_RIGHT);
+    t->move(BOTTOM_RIGHT);
+    t->printDirectionSymbol(BOTTOM_RIGHT);
+    t->move(RIGHT);
+    t->printDirectionSymbol(RIGHT);
+    t->move(BOTTOM_LEFT);
+    t->printDirectionSymbol(BOTTOM_LEFT);
+    t->move(LEFT);
+    t->printDirectionSymbol(LEFT);
+    t->move(BOTTOM_RIGHT);
+    t->printDirectionSymbol(BOTTOM_RIGHT);
+    t->move(BOTTOM_LEFT);
+    t->printDirectionSymbol(BOTTOM_LEFT);
+    t->move(LEFT);
+    t->printDirectionSymbol(LEFT);
+    t->move(TOP_LEFT);
+    t->printDirectionSymbol(TOP_LEFT);
+    t->move(BOTTOM_RIGHT);
+    t->printDirectionSymbol(BOTTOM_RIGHT);
+    t->move(BOTTOM_LEFT);
+    t->printDirectionSymbol(BOTTOM_LEFT);
+    t->move(RIGHT);
+    t->printDirectionSymbol(RIGHT);
+    t->move(BOTTOM_LEFT);
+    t->printDirectionSymbol(BOTTOM_LEFT);
         printf("\n");
 
-	printf("X29: #0: Triangle after shuffle:\n");
+    	printf("X29: #0: Triangle after shuffle:\n");
 		t->print();
 		printf("==============================\n");
 
@@ -779,7 +793,7 @@ int main( int argc, char** argv )
         int flag = 0;
         char message[LENGTH]; // TODO dynamic?
 
-        outter:while(loop)
+        while(loop)
         {
             position = 0;
             MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag, &status);
@@ -796,6 +810,7 @@ int main( int argc, char** argv )
                 switch (status.MPI_TAG)
                 {
                     case MSG_WORK_SENT : // accept work and switch to workState
+                        printf("calling fillStackFromMessage from first ever\n");
                         fillStackFromMessage(s, t, message);
                         loop = 0; // like a break because ondrej is a sucker
                         break;
